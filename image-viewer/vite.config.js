@@ -38,11 +38,11 @@ export default defineConfig(({ mode }) => {
 
               try {
                 const entries = fs.readdirSync(fullPath);
-                const images = entries
+                const files = entries
                   .filter(entry => {
                     const filePath = path.join(fullPath, entry);
                     if (!fs.statSync(filePath).isFile()) return false;
-                    return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'].some(ext => entry.toLowerCase().endsWith(ext));
+                    return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.mp4'].some(ext => entry.toLowerCase().endsWith(ext));
                   })
                   .map(entry => {
                     // Build path relative to public/ for Vite to serve correctly
@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
                   });
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(images));
+                res.end(JSON.stringify(files));
               } catch (error) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: error.message }));

@@ -1,12 +1,12 @@
-// Image file extensions to filter
-const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+// File extensions to filter (images + videos)
+const fileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.mp4'];
 
 // Current image index
 let currentIndex = 0;
 let imageList = [];
 
 // DOM elements
-const mainImage = document.getElementById('mainImage');
+const mediaWrapper = document.getElementById('mediaWrapper');
 const imageInfo = document.getElementById('imageInfo');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -32,7 +32,7 @@ async function loadDirectories() {
       loadImages(dirParam);
     } else {
       dirSelect.innerHTML = '<option value=".">No directories found</option>';
-      imageInfo.textContent = 'No image directories found in public/';
+      imageInfo.textContent = 'No directories with files found in public/';
     }
   } catch (error) {
     console.error('Error loading directories:', error);
@@ -51,32 +51,49 @@ async function loadImages(directory) {
       currentIndex = 0;
       showImage(currentIndex);
     } else {
-      imageInfo.textContent = 'No images found in this directory';
+      imageInfo.textContent = 'No files found in this directory';
       mainImage.src = '';
     }
   } catch (error) {
-    console.error('Error loading images:', error);
+    console.error('Error loading files:', error);
     imageInfo.textContent = `Error: ${error.message}`;
     mainImage.src = '';
   }
 }
 
-// Display current image
+// Display current file
 function showImage(index) {
   if (imageList.length === 0) return;
-  
+
   // Wrap around
   if (index < 0) index = imageList.length - 1;
   if (index >= imageList.length) index = 0;
-  
+
   currentIndex = index;
-  const imagePath = imageList[currentIndex];
-  
-  // Set image source (append timestamp to prevent caching)
-  mainImage.src = `${imagePath}?t=${Date.now()}`;
-  
+  const filePath = imageList[currentIndex];
+  const fileName = filePath.split('/').pop();
+
+  // Clear previous content
+  mediaWrapper.innerHTML = '';
+
+  // Check if it's a video file
+  const isVideo = filePath.toLowerCase().endsWith('.mp4');
+
+  if (isVideo) {
+    // Display as video element
+    mediaWrapper.innerHTML = `<video src="${filePath}?t=${Date.now()}" controls style="max-width: 100%; max-height: 100%;"></video>`;
+  } else {
+    // Display as image
+    const img = document.createElement('img');
+    img.src = `${filePath}?t=${Date.now()}`;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '100%';
+    img.style.objectFit = 'contain';
+    mediaWrapper.appendChild(img);
+  }
+
   // Update info
-  imageInfo.textContent = `${currentIndex + 1} / ${imageList.length} - ${imagePath.split('/').pop()}`;
+  imageInfo.textContent = `${currentIndex + 1} / ${imageList.length} - ${fileName}`;
 }
 
 // Keyboard navigation
@@ -102,9 +119,23 @@ function handleKeyDown(event) {
 prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
 nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
 dirSelect.addEventListener('change', (e) => {
-  loadImages(e.target.value);
+  const newDir = e.target.value;
+  const url = new URL(window.location);
+  url.searchParams.set('dir', newDir);
+  window.history.pushState({}, '', url);
+  loadImages(newDir);
 });
 document.addEventListener('keydown', handleKeyDown);
 
 // Initialize
 loadDirectories();
+
+// Handle URL changes (back/forward buttons)
+window.addEventListener('popstate', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const dirParam = urlParams.get('dir');
+  if (dirParam) {
+    loadImages(dirParam);
+    dirSelect.value = dirParam;
+  }
+});
