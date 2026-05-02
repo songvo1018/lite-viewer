@@ -52,6 +52,46 @@ body {
   background: rgba(0, 0, 0, 0.8);
 }
 
+/* Side navigation buttons for mobile */
+#prevBtnMobile,
+#nextBtnMobile {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64px;
+  height: 64px;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, opacity 0.3s;
+  color: #fff;
+  border-radius: 8px;
+  z-index: 100;
+  padding: 0;
+}
+
+#prevBtnMobile {
+  left: 20px;
+}
+
+#nextBtnMobile {
+  right: 20px;
+}
+
+#prevBtnMobile:hover,
+#nextBtnMobile:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+#prevBtnMobile svg,
+#nextBtnMobile svg {
+  width: 40px;
+  height: 40px;
+}
+
 .nav-btn {
   width: 56px;
   height: 56px;
@@ -71,9 +111,93 @@ body {
   background: rgba(0, 0, 0, 0.8);
 }
 
+.nav-btn.info:hover {
+  background: rgba(66, 133, 244, 0.6);
+}
+
 .nav-btn svg {
   width: 32px;
   height: 32px;
+}
+
+/* Info Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  margin: 10% auto;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+}
+
+.modal-content h2 {
+  color: #fff;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.modal-content p {
+  color: #ccc;
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.modal-content strong {
+  color: #4a90e2;
+}
+
+.ip-list {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.ip-item {
+  background: #333;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 18px;
+  color: #4a90e2;
+  border: 1px solid #444;
+}
+
+.ip-item:last-child {
+  margin-bottom: 0;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 #imageContainer {
@@ -234,5 +358,23 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+/* Desktop: hide side buttons */
+@media (min-width: 769px) {
+  #prevBtnMobile,
+  #nextBtnMobile {
+    display: none !important;
+  }
+}
+
+/* Mobile: hide info button (no room for extra button) */
+@media (max-width: 768px) {
+  #infoBtn {
+    display: none !important;
+  }
+  #navButtons {
+    display: none !important;
   }
 }

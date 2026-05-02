@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Logs</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Consolas', 'Monaco', monospace;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: #252526;
+      padding: 12px 20px;
+      border-bottom: 1px solid #3e3e42;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .status {
+      display: flex;
+      gap: 15px;
+      font-size: 13px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f4871a;
+    }
+
+    .status-dot.ready {
+      background: #4caf50;
+    }
+
+    .status-dot.error {
+      background: #f44336;
+    }
+
+    #logs-container {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #1e1e1e;
+    }
+
+    .log-entry {
+      padding: 6px 0;
+      border-bottom: 1px solid #2d2d30;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-timestamp {
+      color: #858585;
+      margin-right: 10px;
+      min-width: 80px;
+      display: inline-block;
+    }
+
+    .log-info {
+      color: #6a9fb5;
+    }
+
+    .log-success {
+      color: #4caf50;
+    }
+
+    .log-error {
+      color: #f44336;
+    }
+
+    .log-warning {
+      color: #ff9800;
+    }
+
+    .log-actions {
+      padding: 10px 20px;
+      background: #252526;
+      border-top: 1px solid #3e3e42;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    .btn-clear {
+      background: #3c3c3c;
+      color: #ccc;
+    }
+
+    .btn-clear:hover {
+      background: #4c4c4c;
+    }
+
+    .btn-copy {
+      background: #0e639c;
+      color: #fff;
+    }
+
+    .btn-copy:hover {
+      background: #1177bb;
+    }
+
+    .btn-close {
+      background: #c72e2e;
+      color: #fff;
+      margin-left: auto;
+    }
+
+    .btn-close:hover {
+      background: #d64444;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Application Logs</h1>
+    <div class="status">
+      <div class="status-item">
+        <div class="status-dot" id="apiStatus"></div>
+        <span>API Server</span>
+      </div>
+      <div class="status-item">
+        <div class="status-dot" id="viteStatus"></div>
+        <span>Vite Server</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="logs-container"></div>
+
+  <div class="log-actions">
+    <button class="btn-clear" id="clearBtn">Clear Logs</button>
+    <button class="btn-copy" id="copyBtn">Copy All</button>
+    <button class="btn-close" id="closeBtn">Close</button>
+  </div>
+
+  <script>
+    const logsContainer = document.getElementById('logs-container');
+    const apiStatus = document.getElementById('apiStatus');
+    const viteStatus = document.getElementById('viteStatus');
+
+    function addLog(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+
+      const timestamp = new Date().toLocaleTimeString();
+      const typeClass = `log-${type}`;
+
+      entry.innerHTML = `
+        <span class="log-timestamp">[${timestamp}]</span>
+        <span class="${typeClass}">${message}</span>
+      `;
+
+      logsContainer.appendChild(entry);
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+
+    function setStatus(element, status) {
+      element.classList.remove('ready', 'error');
+      if (status === 'ready') {
+        element.classList.add('ready');
+      } else if (status === 'error') {
+        element.classList.add('error');
+      }
+    }
+
+    // Handle messages from electron
+    const electron = window.electron || {};
+    
+    if (typeof require !== 'undefined') {
+      try {
+        const { ipcRenderer } = require('electron');
+        // Listen for log messages
+        ipcRenderer.on('log-message', (e, logEntry) => {
+          addLog(logEntry.message, logEntry.type);
+        });
+        // Listen for status updates
+        ipcRenderer.on('status-update', (e, data) => {
+          if (data.apiReady !== undefined) {
+            setStatus(apiStatus, data.apiReady ? 'ready' : 'error');
+          }
+          if (data.viteReady !== undefined) {
+            setStatus(viteStatus, data.viteReady ? 'ready' : 'error');
+          }
+        });
+      } catch (e) {
+        // Ignore - electron not available
+      }
+    }
+
+    // Button actions
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      logsContainer.innerHTML = '';
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const logs = Array.from(logsContainer.children)
+        .map(el => el.innerText)
+        .join('\n');
+      navigator.clipboard.writeText(logs).then(() => {
+        addLog('Logs copied to clipboard', 'success');
+      });
+    });
+
+    document.getElementById('closeBtn').addEventListener('click', () => {
+      window.close();
+    });
+
+    // Initialize with a welcome message
+    addLog('Application starting...', 'info');
+  </script>
+</body>
+</html>

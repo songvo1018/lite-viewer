@@ -1,6 +1,6 @@
 # Image Viewer
 
-Full-screen image and video viewer built with Vite. Supports images (JPG, PNG, GIF, WebP, BMP, SVG) and videos (MP4).
+Electron-based image viewer with local network access, built with Vite and Electron. Supports images (JPG, PNG, GIF, WebP, BMP, SVG) and videos (MP4).
 
 ## Features
 
@@ -11,6 +11,9 @@ Full-screen image and video viewer built with Vite. Supports images (JPG, PNG, G
 - 🔄 Automatic media reloading (prevents caching)
 - 📱 Fully responsive - works on mobile and desktop
 - 📡 Local network access with automatic IP display
+- 🖥️ **Electron app with logs window** showing server status and logs
+- 📝 **Automatic log file creation** in user data directory
+- 💻 **Side navigation buttons** for mobile devices (replaces swipe gestures)
 
 ## Prerequisites
 
@@ -36,27 +39,32 @@ yarn install
 
 ## Usage
 
-### Starting the Dev Server
+### Starting the Application
 
+#### Development Mode (with Vite)
 ```bash
-npm run dev
+npm run electron
 ```
 
-The server will start automatically in your browser. In the console, you'll see network addresses for accessing from other devices:
+This starts:
+- **Electron app** with logs window showing server status
+- **Vite dev server** for image serving
+- **API server** on port 3000 for file system access
 
+The logs window will display:
+- Server startup status
+- Local IP addresses for network access
+- Error messages and warnings
+- Application lifecycle events
+
+#### Production Mode (Electron EXE)
+```bash
+npm run build:exe
 ```
-══════════════════════════════════════════════════
-🌐 Access from other devices on local network:
 
-   📱 Images: http://192.168.0.139:5173/
-   📂 Directories: http://192.168.0.139:5173/api/directories
-══════════════════════════════════════════════════
+Then run the generated `Lite View.exe` from `release/Lite View-win32-x64/`
 
-  VITE v8.0.10  ready in 201 ms
-
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: http://192.168.0.139:5173/
-```
+See [BUILD_EXE.md](./BUILD_EXE.md) for detailed instructions.
 
 ### Adding Images and Videos
 
@@ -132,15 +140,15 @@ http://192.168.0.139:5173/?dir=nature
 
 | Gesture | Action |
 |---------|--------|
-| Swipe right | Previous image/video |
-| Swipe left | Next image/video |
+| **Side buttons** (left/right edges) | Navigate through images |
 | Tap video | Play/Pause |
 | Tap image | Hide/show |
 
 #### Navigation Buttons
 
 - **Left/Right arrows** - Navigate through images
-- Located at the bottom, near the directory selector
+- Located at the bottom (desktop) or side edges (mobile)
+- Side buttons only appear on mobile devices
 
 ### Video Controls
 
@@ -151,6 +159,32 @@ Videos are displayed with native HTML5 player controls:
 - Fullscreen button
 
 Videos autoplay with audio muted by default for a better viewing experience.
+
+## Application Windows
+
+### Main Image Viewer Window
+
+The main window displays images/videos from the selected directory with navigation controls.
+
+### Logs Window
+
+The logs window appears on startup and shows:
+- Server startup status (API and Vite servers)
+- Local IP addresses for network access
+- Application lifecycle events
+- Error messages and warnings
+
+**Features:**
+- Real-time logging with timestamp
+- Color-coded log levels (info/success/error)
+- Clear logs button
+- Copy all logs button
+- Auto-scroll to latest message
+
+**Log File Location:**
+- Windows: `%APPDATA%\Lite View\app.log`
+- macOS: `~/Library/Application Support/Lite View/app.log`
+- Linux: `~/.config/Lite View/app.log`
 
 ## Project Structure
 
@@ -240,13 +274,14 @@ Example response:
 
 ### "Failed to load images" error
 
-- Make sure the dev server is running: `npm run dev`
+- Make sure the app is running: `npm run electron`
 - Check that the `public/` directory exists
 - Verify files have correct extensions
+- Check logs window for error messages
 
 ### Cannot access from other devices
 
-1. Check firewall allows port 5173
+1. Check firewall allows port 3000 (API) and 5173 (Vite)
 2. Verify devices are on same network
 3. Check `vite.config.js` has `host: '0.0.0.0'`
 4. Try using IP instead of hostname
@@ -259,11 +294,11 @@ Example response:
 
 ### Buttons not visible on mobile
 
-On very small screens (< 480px), navigation buttons are hidden. Use swipe gestures to navigate instead.
+On mobile devices, side navigation buttons appear at the left and right edges of the screen. For very small screens (< 480px), only these side buttons are shown (swipe gestures are disabled).
 
 ## Development
 
-### Building for Production
+### Building for Production (Web)
 
 ```bash
 npm run build
@@ -278,6 +313,25 @@ npm run preview
 ```
 
 This serves the production build locally.
+
+### Building Windows Executable (EXE)
+
+To create a standalone Windows application:
+
+```bash
+npm run build:exe
+```
+
+The command creates:
+```
+release/Lite View-win32-x64/
+├── Lite View.exe       # Main application
+├── public/             # Images/videos folder ( рядом с EXE)
+├── locales/
+└── ... (Electron files)
+```
+
+For detailed instructions, see [BUILD_EXE.md](./BUILD_EXE.md).
 
 ### Custom Build Configuration
 

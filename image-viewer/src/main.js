@@ -10,13 +10,57 @@ const mediaWrapper = document.getElementById('mediaWrapper');
 const imageInfo = document.getElementById('imageInfo');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
+const prevBtnMobile = document.getElementById('prevBtnMobile');
+const nextBtnMobile = document.getElementById('nextBtnMobile');
+const infoBtn = document.getElementById('infoBtn');
 const dirSelect = document.getElementById('dirSelect');
+const infoModal = document.getElementById('infoModal');
+const closeBtn = document.querySelector('.close');
+
+// Load IP addresses from API
+async function loadIPs() {
+  try {
+    const response = await fetch('/api/ips');
+    if (response.ok) {
+      const ips = await response.json();
+      ipList.innerHTML = ips.map(ip => `<div class="ip-item">${ip}:3000</div>`).join('');
+    } else {
+      ipList.innerHTML = '<div class="ip-item">Unable to fetch IPs</div>';
+    }
+  } catch (error) {
+    // Fallback: try to get IPs from localStorage or use placeholder
+    ipList.innerHTML = '<div class="ip-item">192.168.x.x:3000</div><div class="ip-item">Access API on port 3000</div>';
+  }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target === infoModal) {
+    infoModal.style.display = 'none';
+  }
+});
+
+// Event listeners for info button
+if (infoBtn) {
+  infoBtn.addEventListener('click', () => {
+    infoModal.style.display = 'block';
+    loadIPs();
+  });
+}
 
 // Load directory list on startup
 async function loadDirectories() {
+  // Give API server time to start
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
   try {
     const response = await fetch('/api/directories');
-    if (!response.ok) throw new Error('Failed to load directories');
+    if (!response.ok) {
+      if (response.status === 502) {
+        throw new Error('Could not connect to API server. Make sure the Electron app is running.');
+      }
+      throw new Error('Failed to load directories');
+    }
     const directories = await response.json();
 
     if (directories.length > 0) {
@@ -52,12 +96,12 @@ async function loadImages(directory) {
       showImage(currentIndex);
     } else {
       imageInfo.textContent = 'No files found in this directory';
-      mainImage.src = '';
+      mediaWrapper.innerHTML = '';
     }
   } catch (error) {
     console.error('Error loading files:', error);
     imageInfo.textContent = `Error: ${error.message}`;
-    mainImage.src = '';
+    mediaWrapper.innerHTML = '';
   }
 }
 
@@ -110,14 +154,24 @@ function handleKeyDown(event) {
       showImage(currentIndex + 1);
       break;
     case 'Escape':
-      mainImage.style.display = 'none';
+      mediaWrapper.innerHTML = '';
       break;
   }
 }
 
 // Event listeners
-prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
-nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
+if (prevBtn) {
+  prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
+}
+if (nextBtn) {
+  nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
+}
+if (prevBtnMobile) {
+  prevBtnMobile.addEventListener('click', () => showImage(currentIndex - 1));
+}
+if (nextBtnMobile) {
+  nextBtnMobile.addEventListener('click', () => showImage(currentIndex + 1));
+}
 dirSelect.addEventListener('change', (e) => {
   const newDir = e.target.value;
   const url = new URL(window.location);
@@ -139,30 +193,3 @@ window.addEventListener('popstate', () => {
     dirSelect.value = dirParam;
   }
 });
-
-// Touch swipe support for mobile
-let touchStartX = 0;
-let touchEndX = 0;
-
-const handleTouchStart = (e) => {
-  touchStartX = e.touches[0].clientX;
-};
-
-const handleTouchEnd = (e) => {
-  touchEndX = e.changedTouches[0].clientX;
-  handleSwipe();
-};
-
-const handleSwipe = () => {
-  const swipeThreshold = 50;
-  if (touchEndX < touchStartX - swipeThreshold) {
-    showImage(currentIndex + 1);
-  }
-  if (touchEndX > touchStartX + swipeThreshold) {
-    showImage(currentIndex - 1);
-  }
-};
-
-// Add touch event listeners to media wrapper
-mediaWrapper.addEventListener('touchstart', handleTouchStart);
-mediaWrapper.addEventListener('touchend', handleTouchEnd);

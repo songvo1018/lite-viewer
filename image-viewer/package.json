@@ -2,16 +2,27 @@
   "name": "image-viewer",
   "version": "1.0.0",
   "description": "Full-screen image viewer",
-  "main": "index.js",
+  "main": "electron-main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:exe": "electron-packager . \"Lite View\" --platform=win32 --arch=x64 --electron-version=41.5.0 --out=release --overwrite --icon=public/icon.ico && xcopy /E /I /Y public \"release\\Lite View-win32-x64\\public\"",
+    "electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^41.5.0",
+    "electron-packager": "^17.1.2",
+    "vite": "^8.0.10",
+    "wait-on": "^9.0.5"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1",
     "vite": "^8.0.10"
   }
 }
