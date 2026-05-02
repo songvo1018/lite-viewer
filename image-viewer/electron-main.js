@@ -191,34 +191,127 @@ function createWindow() {
 
   try {
     mainWindow = new BrowserWindow({
-      width: 1200,
-      height: 800,
+      width: 600,
+      height: 400,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
         enableRemoteModule: false
       },
-      backgroundColor: '#000',
+      backgroundColor: '#1a1a2e',
       show: false,
       autoHideMenuBar: true
     });
-    
+
     logMessage('Main window created successfully', 'success');
   } catch (error) {
     logMessage(`Failed to create main window: ${error.message}`, 'error');
     throw error;
   }
 
-  const url = `http://localhost:${vitePort}`;
-  logMessage(`Loading URL: ${url}`, 'info');
+  // Load simple HTML with status text instead of browser
+  const statusPage = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Lite View</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          color: white;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        .container {
+          text-align: center;
+          padding: 40px;
+        }
+        h1 {
+          font-size: 3rem;
+          margin: 0 0 20px 0;
+          background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .status {
+          font-size: 1.2rem;
+          color: #a0a0a0;
+        }
+        .server-status {
+          margin-top: 30px;
+          padding: 20px;
+          background: rgba(255,255,255,0.1);
+          border-radius: 10px;
+        }
+        .server-item {
+          margin: 10px 0;
+          padding: 10px 20px;
+          border-radius: 5px;
+          display: inline-block;
+        }
+        .status-ok {
+          background: #28a745;
+        }
+        .status-pending {
+          background: #ffc107;
+        }
+        .port {
+          font-family: monospace;
+          background: rgba(0,0,0,0.3);
+          padding: 2px 8px;
+          border-radius: 3px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Lite View</h1>
+        <div class="status">Online</div>
+        <div class="server-status" id="serverStatus">
+          <div>Initializing...</div>
+        </div>
+      </div>
+      <script>
+        // Listen for server status updates from main process
+        const { ipcRenderer } = require('electron');
+        const statusEl = document.getElementById('serverStatus');
 
-  // Always load from Vite dev server
-  mainWindow.loadURL(url).catch(err => {
-    logMessage(`Failed to load URL: ${err.message}`, 'error');
-    console.error('Failed to load URL:', err);
+        function updateStatus(api, vite) {
+          let html = '';
+          if (api) {
+            html += '<span class="server-item status-ok">✓ API Server: Running</span> ';
+          } else {
+            html += '<span class="server-item status-pending">○ API Server: Pending</span> ';
+          }
+          if (vite) {
+            html += '<span class="server-item status-ok">✓ Image Server: Running on port <span class="port">' + vitePort + '</span></span>';
+          } else {
+            html += '<span class="server-item status-pending">○ Image Server: Pending</span>';
+          }
+          statusEl.innerHTML = html;
+        }
+
+        ipcRenderer.on('status-update', (event, data) => {
+          updateStatus(data.apiReady, data.viteReady);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
+  // Use loadURL with data protocol for HTML string
+  const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(statusPage);
+  mainWindow.loadURL(dataUrl).catch(err => {
+    logMessage(`Failed to load status page: ${err.message}`, 'error');
   });
 
-  // Open DevTools
+  // Open DevTools for debugging
   mainWindow.webContents.openDevTools();
 
   // Send status to logs window
@@ -237,25 +330,25 @@ function createWindow() {
   mainWindow.on('closed', () => {
     logMessage('Main window closed, shutting down servers...', 'info');
     mainWindow = null;
-    
+
     // Close logs window if it exists
     if (logsWindow && !logsWindow.isDestroyed()) {
       logsWindow.close();
     }
-    
+
     // Close servers explicitly
     if (apiServer) {
       logMessage('Closing API server...', 'info');
       apiServer.close();
       apiServer = null;
     }
-    
+
     if (viteProcess) {
       logMessage('Stopping Vite process...', 'info');
       viteProcess.kill();
       viteProcess = null;
     }
-    
+
     // Quit app when main window closes
     if (process.platform !== 'darwin') {
       app.quit();
@@ -266,7 +359,7 @@ function createWindow() {
     console.log('Window ready to show');
     mainWindow.show();
   });
-  
+
   // Fallback: show after delay if ready-to-show doesn't fire
   setTimeout(() => {
     if (mainWindow && !mainWindow.isVisible()) {
@@ -368,14 +461,14 @@ function createApiServer() {
 
     server.listen(API_PORT, () => {
       logMessage(`API server running on http://127.0.0.1:${API_PORT}`, 'success');
-      
+
       // Update status in logs window
       try {
         if (logsWindow && !logsWindow.isDestroyed()) {
           logsWindow.webContents.send('status-update', { apiReady: true });
         }
       } catch (e) {}
-      
+
       resolve(server);
     });
 
@@ -404,16 +497,22 @@ app.whenReady().then(async () => {
       if (logsWindow && !logsWindow.isDestroyed()) {
         logsWindow.webContents.send('status-update', { apiReady: true });
       }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('status-update', { apiReady: true, vitePort });
+      }
     } catch (e) {}
 
     // Start Vite dev server
     vitePort = await startViteServer();
     logMessage(`Vite server started successfully on port ${vitePort}`, 'success');
-    
+
     // Update status
     try {
       if (logsWindow && !logsWindow.isDestroyed()) {
         logsWindow.webContents.send('status-update', { viteReady: true });
+      }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('status-update', { apiReady: true, viteReady: true, vitePort });
       }
     } catch (e) {}
   } catch (error) {

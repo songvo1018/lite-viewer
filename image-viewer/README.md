@@ -1,17 +1,18 @@
-# Image Viewer
+# Lite View
 
-Electron-based image viewer with local network access, built with Vite and Electron. Supports images (JPG, PNG, GIF, WebP, BMP, SVG) and videos (MP4).
+Electron-based media viewer with local network access, built with Vite and Electron. Supports images (JPG, PNG, GIF, WebP, BMP, SVG) and videos (MP4).
 
 ## Features
 
-- 🔍 Full-screen image viewer with keyboard navigation
+- 🖼️ Full-screen image viewer with keyboard navigation
 - ▶️ Video playback support (MP4 format)
 - 📁 Directory-based browsing with dropdown selector
 - 🎨 Modern dark theme UI
 - 🔄 Automatic media reloading (prevents caching)
 - 📱 Fully responsive - works on mobile and desktop
 - 📡 Local network access with automatic IP display
-- 🖥️ **Electron app with logs window** showing server status and logs
+- 🖥️ **Electron app with status window** showing "Lite View is Online"
+- 📡 **API server** for image directory access
 - 📝 **Automatic log file creation** in user data directory
 - 💻 **Side navigation buttons** for mobile devices (replaces swipe gestures)
 
@@ -37,6 +38,14 @@ Or with yarn:
 yarn install
 ```
 
+## Image Storage
+
+Lite View uses **separate image storage** - images are NOT bundled inside the executable. The EXE (~250MB) contains only the application code, while images are stored in a separate `public/` folder that must be placed alongside the EXE.
+
+**Important**: When distributing or updating the application, the `public/` folder must be copied separately next to `Lite View.exe`.
+
+See [IMAGE_STORAGE.md](./IMAGE_STORAGE.md) for complete details about the image storage architecture.
+
 ## Usage
 
 ### Starting the Application
@@ -47,9 +56,20 @@ npm run electron
 ```
 
 This starts:
-- **Electron app** with logs window showing server status
-- **Vite dev server** for image serving
+- **Electron app** with status window showing "Lite View is Online"
+- **Vite dev server** for image serving on port 5173
 - **API server** on port 3000 for file system access
+
+**Main Window:**
+- Displays "Lite View is Online" with server status indicators
+- Shows when API and Vite servers are ready
+- Compact 600×400 window
+
+**Logs Window:**
+- Opens automatically on startup
+- Shows detailed server startup status
+- Local IP addresses for network access
+- Error messages and warnings
 
 The logs window will display:
 - Server startup status
@@ -185,6 +205,32 @@ The logs window appears on startup and shows:
 - Windows: `%APPDATA%\Lite View\app.log`
 - macOS: `~/Library/Application Support/Lite View/app.log`
 - Linux: `~/.config/Lite View/app.log`
+
+## Application Windows
+
+### Main Status Window
+
+Shows "Lite View is Online" with server status indicators:
+- ✓ API Server: Running (green) - File system access on port 3000
+- ✓ Image Server: Running on port 5173 (green) - Vite dev server
+- Pending status shown in yellow during startup
+
+Window size: 600×400 pixels with modern dark theme.
+
+### Logs Window
+
+Opens automatically on startup and displays:
+- Server startup status (API and Vite servers)
+- Local IP addresses for network access
+- Application lifecycle events
+- Error messages and warnings
+
+**Features:**
+- Real-time logging with timestamp
+- Color-coded log levels (info/success/error)
+- Clear logs button
+- Copy all logs button
+- Auto-scroll to latest message
 
 ## Project Structure
 
@@ -326,12 +372,14 @@ The command creates:
 ```
 release/Lite View-win32-x64/
 ├── Lite View.exe       # Main application
-├── public/             # Images/videos folder ( рядом с EXE)
+├── public/             # Images/videos folder (next to EXE)
 ├── locales/
 └── ... (Electron files)
 ```
 
-For detailed instructions, see [BUILD_EXE.md](./BUILD_EXE.md).
+For detailed instructions, see:
+- [BUILD_EXE.md](./BUILD_EXE.md) - Build instructions
+- [IMAGE_STORAGE.md](./IMAGE_STORAGE.md) - Image storage architecture
 
 ### Custom Build Configuration
 
