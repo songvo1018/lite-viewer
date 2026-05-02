@@ -139,3 +139,30 @@ window.addEventListener('popstate', () => {
     dirSelect.value = dirParam;
   }
 });
+
+// Touch swipe support for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+const handleTouchStart = (e) => {
+  touchStartX = e.touches[0].clientX;
+};
+
+const handleTouchEnd = (e) => {
+  touchEndX = e.changedTouches[0].clientX;
+  handleSwipe();
+};
+
+const handleSwipe = () => {
+  const swipeThreshold = 50;
+  if (touchEndX < touchStartX - swipeThreshold) {
+    showImage(currentIndex + 1);
+  }
+  if (touchEndX > touchStartX + swipeThreshold) {
+    showImage(currentIndex - 1);
+  }
+};
+
+// Add touch event listeners to media wrapper
+mediaWrapper.addEventListener('touchstart', handleTouchStart);
+mediaWrapper.addEventListener('touchend', handleTouchEnd);

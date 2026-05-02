@@ -8,8 +8,9 @@ Full-screen image and video viewer built with Vite. Supports images (JPG, PNG, G
 - ▶️ Video playback support (MP4 format)
 - 📁 Directory-based browsing with dropdown selector
 - 🎨 Modern dark theme UI
-- 🔄 Automatic image reloading (prevents caching)
-- 📱 Responsive design
+- 🔄 Automatic media reloading (prevents caching)
+- 📱 Fully responsive - works on mobile and desktop
+- 📡 Local network access with automatic IP display
 
 ## Prerequisites
 
@@ -41,7 +42,21 @@ yarn install
 npm run dev
 ```
 
-The server will start on `http://localhost:5173/` and open automatically in your browser.
+The server will start automatically in your browser. In the console, you'll see network addresses for accessing from other devices:
+
+```
+══════════════════════════════════════════════════
+🌐 Access from other devices on local network:
+
+   📱 Images: http://192.168.0.139:5173/
+   📂 Directories: http://192.168.0.139:5173/api/directories
+══════════════════════════════════════════════════
+
+  VITE v8.0.10  ready in 201 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.0.139:5173/
+```
 
 ### Adding Images and Videos
 
@@ -90,13 +105,42 @@ The viewer includes a dropdown menu at the top for easy directory selection. Sel
 - Load all images/videos from that directory
 - Enable browser navigation (back/forward buttons)
 
-### Keyboard Controls
+#### From Other Devices on Local Network
+
+Copy the network address from the console output or use your computer's IP:
+
+```
+http://192.168.0.139:5173/?dir=nature
+```
+
+**Requirements:**
+- Your computer and device must be on the same Wi-Fi/LAN
+- Windows Firewall may prompt - allow access for local network
+- Port 5173 must be accessible
+
+### Controls
+
+#### Keyboard (Desktop)
 
 | Key | Action |
 |-----|--------|
 | `ArrowLeft` or `A` | Previous image/video |
 | `ArrowRight` or `D` | Next image/video |
 | `Esc` | Hide the media viewer (shows only navigation buttons) |
+
+#### Touch (Mobile)
+
+| Gesture | Action |
+|---------|--------|
+| Swipe right | Previous image/video |
+| Swipe left | Next image/video |
+| Tap video | Play/Pause |
+| Tap image | Hide/show |
+
+#### Navigation Buttons
+
+- **Left/Right arrows** - Navigate through images
+- Located at the bottom, near the directory selector
 
 ### Video Controls
 
@@ -132,23 +176,32 @@ Edit `vite.config.js`:
 server: {
   port: 8080,  // Change to your desired port
   open: true,
+  host: '0.0.0.0',  // Required for network access
   // ...
 }
 ```
 
 ### Adding More File Types
 
-Modify the file extensions filter in `vite.config.js`:
+Modify the file extensions filter in `vite.config.js` (around line 42):
 
 ```javascript
 return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.mp4', '.mov'].some(ext => entry.toLowerCase().endsWith(ext));
 ```
 
-And in `src/main.js`:
+And in `src/main.js` (line 2):
 
 ```javascript
 const fileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.mp4', '.mov'];
 ```
+
+### Customizing Styles
+
+Edit `src/style.css` to change colors, sizes, and layout. Key selectors:
+- `#app` - Main container
+- `#mediaWrapper` - Image/video container
+- `#imageInfo` - Filename display
+- `.nav-btn` - Navigation buttons
 
 ## API Endpoints
 
@@ -191,11 +244,22 @@ Example response:
 - Check that the `public/` directory exists
 - Verify files have correct extensions
 
+### Cannot access from other devices
+
+1. Check firewall allows port 5173
+2. Verify devices are on same network
+3. Check `vite.config.js` has `host: '0.0.0.0'`
+4. Try using IP instead of hostname
+
 ### Videos not playing
 
-- Ensure the video is in MP4 format
-- Check browser compatibility (modern browsers support MP4 with H.264 codec)
+- Ensure the video is in MP4 format with H.264 codec
+- Check browser compatibility (modern browsers support MP4)
 - Try re-encoding the video with: `ffmpeg -i input.mp4 -c:v libx264 -c:a aac output.mp4`
+
+### Buttons not visible on mobile
+
+On very small screens (< 480px), navigation buttons are hidden. Use swipe gestures to navigate instead.
 
 ## Development
 
@@ -205,10 +269,31 @@ Example response:
 npm run build
 ```
 
+This creates an optimized build in `dist/` directory.
+
 ### Preview Production Build
 
 ```bash
 npm run preview
+```
+
+This serves the production build locally.
+
+### Custom Build Configuration
+
+Edit `vite.config.js` to customize:
+
+```javascript
+export default defineConfig(({ mode }) => {
+  return {
+    server: {
+      port: 5173,
+      open: false,        // Don't open browser automatically
+      host: '0.0.0.0',    // Allow network access
+      // ...
+    }
+  };
+});
 ```
 
 ## License

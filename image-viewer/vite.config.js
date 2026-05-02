@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       open: true,
+      host: '0.0.0.0',
       proxy: {
         '/api/images': {
           target: `http://127.0.0.1:${API_PORT}`,
@@ -81,6 +82,27 @@ export default defineConfig(({ mode }) => {
 
           apiServer.listen(API_PORT, () => {
             console.log(`API server running on http://127.0.0.1:${API_PORT}`);
+          });
+
+          // Log network addresses after server starts
+          server.httpServer.on('listening', () => {
+            const os = require('os');
+            const interfaces = os.networkInterfaces();
+            const port = server.config.server.port;
+
+            console.log('\n' + '═'.repeat(50));
+            console.log('🌐 Access from other devices on local network:');
+            console.log('');
+            
+            for (const name of Object.keys(interfaces)) {
+              for (const addr of interfaces[name]) {
+                if (addr.family === 'IPv4' && !addr.internal) {
+                  console.log(`   📱 Images: http://${addr.address}:${port}/`);
+                  console.log(`   📂 Directories: http://${addr.address}:${port}/api/directories`);
+                }
+              }
+            }
+            console.log('═'.repeat(50) + '\n');
           });
 
           server.httpServer.on('close', () => {
