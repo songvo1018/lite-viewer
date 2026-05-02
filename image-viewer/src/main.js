@@ -12,10 +12,46 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const prevBtnMobile = document.getElementById('prevBtnMobile');
 const nextBtnMobile = document.getElementById('nextBtnMobile');
-const infoBtn = document.getElementById('infoBtn');
+const timerBtn = document.getElementById('timerBtn');
+const timerValue = document.getElementById('timerValue');
+const autoRotateCheck = document.getElementById('autoRotateCheck');
+const speedRange = document.getElementById('speedRange');
+const speedValue = document.getElementById('speedValue');
 const dirSelect = document.getElementById('dirSelect');
 const infoModal = document.getElementById('infoModal');
 const closeBtn = document.querySelector('.close');
+
+// Auto-rotate state
+let autoRotateEnabled = false;
+let autoRotateInterval = null;
+let autoRotateSpeed = 2; // Default 2 seconds
+
+// Update timer display
+function updateTimerDisplay() {
+  if (timerValue) {
+    timerValue.textContent = `${autoRotateSpeed}s`;
+  }
+}
+
+// Auto-rotate images
+function startAutoRotate() {
+  if (autoRotateInterval) {
+    clearInterval(autoRotateInterval);
+  }
+  
+  if (autoRotateEnabled && imageList.length > 0) {
+    autoRotateInterval = setInterval(() => {
+      showImage(currentIndex + 1);
+    }, autoRotateSpeed * 1000);
+  }
+}
+
+function stopAutoRotate() {
+  if (autoRotateInterval) {
+    clearInterval(autoRotateInterval);
+    autoRotateInterval = null;
+  }
+}
 
 // Load IP addresses from API
 async function loadIPs() {
@@ -172,11 +208,57 @@ if (prevBtnMobile) {
 if (nextBtnMobile) {
   nextBtnMobile.addEventListener('click', () => showImage(currentIndex + 1));
 }
+if (timerBtn) {
+  timerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dropdown = document.getElementById('timerDropdown');
+    dropdown.classList.toggle('show');
+  });
+}
+
+// Close dropdown when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target !== timerBtn && !timerBtn.contains(e.target)) {
+    const dropdown = document.getElementById('timerDropdown');
+    dropdown.classList.remove('show');
+  }
+  if (e.target === infoModal) {
+    infoModal.style.display = 'none';
+  }
+});
+
+// Auto-rotate controls
+if (autoRotateCheck) {
+  autoRotateCheck.addEventListener('change', (e) => {
+    autoRotateEnabled = e.target.checked;
+    if (autoRotateEnabled) {
+      startAutoRotate();
+    } else {
+      stopAutoRotate();
+    }
+  });
+}
+
+if (speedRange) {
+  speedRange.addEventListener('input', (e) => {
+    autoRotateSpeed = parseFloat(e.target.value);
+    updateTimerDisplay();
+    if (autoRotateEnabled) {
+      startAutoRotate(); // Restart with new speed
+    }
+  });
+}
+
+if (speedValue) {
+  speedValue.textContent = `${autoRotateSpeed} сек`;
+}
+
 dirSelect.addEventListener('change', (e) => {
   const newDir = e.target.value;
   const url = new URL(window.location);
   url.searchParams.set('dir', newDir);
   window.history.pushState({}, '', url);
+  stopAutoRotate(); // Stop auto-rotate when changing directories
   loadImages(newDir);
 });
 document.addEventListener('keydown', handleKeyDown);
