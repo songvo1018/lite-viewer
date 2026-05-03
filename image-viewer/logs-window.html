@@ -17,6 +17,8 @@
       color: #d4d4d4;
       height: 100vh;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
@@ -62,8 +64,10 @@
 
     #logs-container {
       flex: 1;
+      min-height: 0;
       padding: 15px;
       overflow-y: auto;
+      scroll-behavior: smooth;
       background: #1e1e1e;
     }
 
@@ -188,7 +192,10 @@
       `;
 
       logsContainer.appendChild(entry);
-      logsContainer.scrollTop = logsContainer.scrollHeight;
+      // Use requestAnimationFrame for smooth scrolling
+      requestAnimationFrame(() => {
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+      });
     }
 
     function setStatus(element, status) {

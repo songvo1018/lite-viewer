@@ -55,6 +55,23 @@ release/Lite View-win32-x64/
 2. Copy **entire** `release/Lite View-win32-x64/` folder to target computer
 3. The `public/` folder is already included with your images
 
+### Development Mode
+When running in development mode, images are loaded from the project's `public/` folder:
+
+```bash
+# Full Electron app (includes API + Vite servers)
+npm run electron
+
+# Standalone servers (Vite + API only)
+npm run start
+
+# Individual servers
+npm run dev   # Vite server only
+npm run api   # API server only
+```
+
+All modes read images from `image-viewer/public/` directory.
+
 ### Adding New Images Later
 **Option A: Replace entire images folder**
 ```bash
@@ -126,8 +143,39 @@ release/Lite View-win32-x64/
 ```
 
 ### Development vs Production
-- **Development**: `npm run electron` reads from `image-viewer/public/`
+- **Development**: `npm run electron` or `npm run start` reads from `image-viewer/public/`
 - **Production**: EXE reads from `release/Lite View-win32-x64/public/`
+
+## Development Servers
+
+When running in development mode, two servers work together:
+
+### Vite Dev Server (Port 5173)
+- Serves static files from `public/` directory
+- Handles HTML routing with History API support
+- Enables hot module replacement (HMR) for development
+- Access via: `http://localhost:5173/?dir=dirname`
+
+### API Server (Port 3000)
+Provides REST endpoints for file system operations:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/images?dir=name` | GET | List images in directory |
+| `/api/directories` | GET | List all directories |
+| `/api/rename-directory` | POST | Rename a directory |
+| `/api/ips` | GET | Get local IP addresses |
+
+**Example requests:**
+```bash
+# List directories
+curl http://localhost:3000/api/directories
+
+# List images in a directory
+curl "http://localhost:3000/api/images?dir=test-images"
+```
+
+See [BUILD_EXE.md](./BUILD_EXE.md) for more details on development servers.
 
 ## Technical Details
 

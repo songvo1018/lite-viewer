@@ -22,6 +22,10 @@ export default defineConfig(({ mode }) => {
         '/api/ips': {
           target: 'http://127.0.0.1:3000',
           changeOrigin: true
+        },
+        '/api/rename-directory': {
+          target: 'http://127.0.0.1:3000',
+          changeOrigin: true
         }
       }
     },

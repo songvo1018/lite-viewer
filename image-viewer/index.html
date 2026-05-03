@@ -27,6 +27,13 @@
       </svg>
     </button>
 
+    <button id="renameBtn" class="nav-btn rename" aria-label="Rename directory">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </button>
+
     <button id="prevBtnMobile" class="nav-btn prev" aria-label="Previous image">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M15 18l-6-6 6-6"/>
@@ -47,7 +54,7 @@
       <p>From another device on your local network:</p>
       <div id="ipList" class="ip-list"></div>
       <p>Use port <strong>3000</strong> to access the API directly</p>
-      
+
       <h3>Auto-Rotate Settings</h3>
       <div class="setting-row">
         <label class="checkbox-label">
@@ -62,6 +69,20 @@
           <span id="speedValue" class="range-value">2 сек</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="renameModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Rename Directory</h2>
+      <p>Current directory: <strong id="currentDirName" style="color: #4a90e2;">...</strong></p>
+      <div style="margin: 20px 0;">
+        <label for="newDirName" style="display: block; color: #ccc; margin-bottom: 8px;">New name:</label>
+        <input type="text" id="newDirName" style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #333; border-radius: 6px; background: #2a2a2a; color: #fff; outline: none; box-sizing: border-box;" placeholder="Enter new directory name">
+      </div>
+      <button id="confirmRename" style="padding: 12px 24px; font-size: 16px; background: #4a90e2; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s;">Rename</button>
+      <button id="cancelRename" style="padding: 12px 24px; font-size: 16px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-left: 10px; transition: background 0.2s;">Cancel</button>
     </div>
   </div>
 

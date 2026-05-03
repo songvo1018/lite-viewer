@@ -5,9 +5,12 @@
   "main": "electron-main.js",
   "scripts": {
     "dev": "vite",
+    "api": "node api-server.js",
+    "vite": "vite",
     "build": "vite build",
     "build:exe": "electron-packager . \"Lite View\" --platform=win32 --arch=x64 --electron-version=41.5.0 --out=release --overwrite --icon=public/icon.ico && xcopy /E /I /Y public \"release\\Lite View-win32-x64\\public\"",
     "electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "start": "concurrently \"npm run api\" \"npm run dev\"",
     "preview": "vite preview"
   },
   "keywords": [],

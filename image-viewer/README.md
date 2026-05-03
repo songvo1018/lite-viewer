@@ -50,7 +50,9 @@ See [IMAGE_STORAGE.md](./IMAGE_STORAGE.md) for complete details about the image 
 
 ### Starting the Application
 
-#### Development Mode (with Vite)
+#### Development Mode Options
+
+**Option 1: Full Electron App (Recommended for testing)**
 ```bash
 npm run electron
 ```
@@ -60,22 +62,29 @@ This starts:
 - **Vite dev server** for image serving on port 5173
 - **API server** on port 3000 for file system access
 
-**Main Window:**
+**Option 2: Standalone Development Servers (For browser-based development)**
+```bash
+npm run start
+```
+
+This starts:
+- **Vite dev server** on port 5173
+- **API server** on port 3000
+
+Open browser to `http://localhost:5173` to view the application.
+
+**Option 3: Run Servers Separately**
+```bash
+npm run dev      # Start Vite dev server only
+npm run api      # Start API server only
+```
+
+Useful for debugging specific components or running tests.
+
+**Main Window (Electron only):**
 - Displays "Lite View is Online" with server status indicators
 - Shows when API and Vite servers are ready
 - Compact 600×400 window
-
-**Logs Window:**
-- Opens automatically on startup
-- Shows detailed server startup status
-- Local IP addresses for network access
-- Error messages and warnings
-
-The logs window will display:
-- Server startup status
-- Local IP addresses for network access
-- Error messages and warnings
-- Application lifecycle events
 
 #### Production Mode (Electron EXE)
 ```bash
@@ -343,6 +352,26 @@ Example response:
 On mobile devices, side navigation buttons appear at the left and right edges of the screen. For very small screens (< 480px), only these side buttons are shown (swipe gestures are disabled).
 
 ## Development
+
+### Running Development Servers
+
+#### Full Setup (Electron + Vite + API)
+```bash
+npm run electron
+```
+
+#### Standalone Servers (Browser-based development)
+```bash
+npm run start
+```
+
+This runs both Vite and API servers without Electron. Access at `http://localhost:5173`
+
+#### Individual Servers
+```bash
+npm run dev   # Vite dev server only (port 5173)
+npm run api   # API server only (port 3000)
+```
 
 ### Building for Production (Web)
 

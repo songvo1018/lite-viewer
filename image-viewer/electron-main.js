@@ -101,7 +101,9 @@ function logMessage(message, type = 'info') {
 }
 
 // Check if running in production (ASAR archive)
-const isProduction = app.isPackaged;
+// Force dev mode by setting ELECTRON_FORCE_DEV=1 in environment
+const isProduction = process.env.ELECTRON_FORCE_DEV === '1' ? false : app.isPackaged;
+console.log('isProduction:', isProduction, 'app.isPackaged:', app.isPackaged, 'ELECTRON_FORCE_DEV:', process.env.ELECTRON_FORCE_DEV);
 
 // Start Vite dev server
 function startViteServer() {
@@ -371,17 +373,34 @@ function createWindow() {
 
 // Get public directory path (works in both dev and production)
 function getPublicDir() {
+  console.log('getPublicDir called, isProduction:', isProduction);
   if (isProduction) {
     // In production, public is next to the executable
     // app.getPath('exe') returns the full path to Lite View.exe
     // We need to get its parent directory, then look for 'public'
-    const exeDir = path.dirname(app.getPath('exe'));
+    const exePath = app.getPath('exe');
+    const exeDir = path.dirname(exePath);
     const publicDir = path.join(exeDir, 'public');
-    console.log('getPublicDir:', publicDir);
+    console.log('getPublicDir (production):');
+    console.log('  exePath:', exePath);
+    console.log('  exeDir:', exeDir);
+    console.log('  publicDir:', publicDir);
+    console.log('  exists:', fs.existsSync(publicDir));
+    
+    // List contents of exeDir for debugging
+    try {
+      const exeDirContents = fs.readdirSync(exeDir);
+      console.log('  exeDir contents:', exeDirContents);
+    } catch (e) {
+      console.log('  Could not read exeDir:', e.message);
+    }
+    
     return publicDir;
   } else {
-    // In dev, public is in project root
-    return path.join(__dirname, 'public');
+    // In dev, public is in project root (__dirname is where electron-main.js is)
+    const devPublicDir = path.join(__dirname, 'public');
+    console.log('getPublicDir (dev):', devPublicDir);
+    return devPublicDir;
   }
 }
 
@@ -424,6 +443,8 @@ function createApiServer() {
       } else if (req.url.startsWith('/api/directories')) {
         try {
           const publicDir = getPublicDir();
+          logMessage(`Directories request - publicDir: ${publicDir}, exists: ${fs.existsSync(publicDir)}`, 'info');
+          
           if (!fs.existsSync(publicDir)) {
             res.writeHead(404);
             res.end(JSON.stringify({ error: 'Public directory not found' }));
@@ -431,19 +452,74 @@ function createApiServer() {
           }
 
           const entries = fs.readdirSync(publicDir);
+          logMessage(`Directories found: ${entries.length}`, 'info');
+          
           const directories = entries
             .filter(entry => {
               const fullPath = path.join(publicDir, entry);
-              return fs.statSync(fullPath).isDirectory();
+              const isDir = fs.statSync(fullPath).isDirectory();
+              if (isDir) logMessage(`  Directory: ${entry}`, 'info');
+              return isDir;
             })
             .map(entry => ({ name: entry, path: entry }));
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(directories));
         } catch (error) {
+          logMessage(`Failed to list directories: ${error.message}`, 'error');
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: error.message }));
         }
+      } else if (req.url.startsWith('/api/rename-directory') && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', () => {
+          try {
+            const { oldPath, newPath } = JSON.parse(body);
+            const publicDir = getPublicDir();
+            // Normalize paths - replace backslashes with forward slashes and remove leading/trailing slashes
+            const normalizedOldPath = oldPath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+            const normalizedNewPath = newPath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+            
+            const oldFullPath = path.join(publicDir, normalizedOldPath);
+            const newFullPath = path.join(publicDir, normalizedNewPath);
+
+            logMessage(`Rename request: oldPath="${oldPath}" -> "${normalizedOldPath}", newPath="${newPath}" -> "${normalizedNewPath}"`, 'info');
+            logMessage(`Public dir: ${publicDir}`, 'info');
+            logMessage(`Old full path exists check: ${oldFullPath}`, 'info');
+            logMessage(`Old full path exists: ${fs.existsSync(oldFullPath)}`, 'info');
+
+            if (!fs.existsSync(oldFullPath)) {
+              const errorBody = JSON.stringify({ 
+                error: 'Directory not found',
+                requestedPath: normalizedOldPath,
+                publicDir: publicDir,
+                fullSearchPath: oldFullPath
+              });
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(errorBody);
+              return;
+            }
+
+            if (fs.existsSync(newFullPath)) {
+              res.writeHead(409, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Directory with new name already exists' }));
+              return;
+            }
+
+            fs.renameSync(oldFullPath, newFullPath);
+            logMessage(`Renamed directory: ${normalizedOldPath} -> ${normalizedNewPath}`, 'success');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, newPath: normalizedNewPath }));
+          } catch (error) {
+            logMessage(`Failed to rename directory: ${error.message}`, 'error');
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+          }
+        });
+        return;
       } else if (req.url.startsWith('/api/ips')) {
         try {
           const ips = getLocalIPs();

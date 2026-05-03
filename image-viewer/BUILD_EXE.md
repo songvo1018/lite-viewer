@@ -5,7 +5,34 @@
 - Node.js (version 18+)
 - npm package manager
 
-## Сборка
+## Разработка
+
+### Варианты запуска в режиме разработки
+
+#### 1. Полное приложение (Electron + серверы)
+```bash
+npm run electron
+```
+
+Запускает:
+- Electron приложение с окном статуса
+- Vite dev server (порт 5173)
+- API server (порт 3000)
+
+#### 2. Стандalone серверы (для разработки в браузере)
+```bash
+npm run start
+```
+
+Запускает Vite и API серверы без Electron. Откройте `http://localhost:5173` в браузере.
+
+#### 3. Отдельные серверы
+```bash
+npm run dev   # Только Vite server
+npm run api   # Только API server
+```
+
+### Сборка
 
 ```bash
 npm run build:exe
@@ -106,6 +133,42 @@ http://192.168.0.139:5173
 - Оба устройства должны быть в одной Wi-Fi/LAN сети
 - Порт 5173 (Vite) должен быть доступен
 - Порт 3000 (API) используется для получения списка изображений
+
+## Разработка серверов без Electron
+
+Для отладки API или Vite серверов можно запускать их отдельно:
+
+```bash
+# Запустить только API сервер
+npm run api
+
+# Запустить только Vite сервер
+npm run dev
+
+# Запустить оба сервера одновременно
+npm run start
+```
+
+**API server (порт 3000):**
+- `/api/images?dir=dirname` - список изображений
+- `/api/directories` - список папок
+- `/api/rename-directory` - переименование папки
+- `/api/ips` - локальные IP-адреса
+
+**Vite server (порт 5173):**
+- Сервис статических файлов из `public/`
+- Поддержка HTML5 History API
+- Горячая перезагрузка (HMR)
+
+**Примеры:**
+```bash
+# Просмотр конкретной папки
+curl http://localhost:3000/api/directories
+curl http://localhost:5173/?dir=test-images
+
+# Запуск обеих серверов
+npm run start
+```
 
 ## Примечания
 

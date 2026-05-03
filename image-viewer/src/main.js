@@ -4,6 +4,7 @@ const fileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'
 // Current image index
 let currentIndex = 0;
 let imageList = [];
+let currentDirectoryPath = '';
 
 // DOM elements
 const mediaWrapper = document.getElementById('mediaWrapper');
@@ -18,7 +19,14 @@ const autoRotateCheck = document.getElementById('autoRotateCheck');
 const speedRange = document.getElementById('speedRange');
 const speedValue = document.getElementById('speedValue');
 const dirSelect = document.getElementById('dirSelect');
+const infoBtn = document.getElementById('infoBtn');
 const infoModal = document.getElementById('infoModal');
+const renameBtn = document.getElementById('renameBtn');
+const renameModal = document.getElementById('renameModal');
+const currentDirNameEl = document.getElementById('currentDirName');
+const newDirNameInput = document.getElementById('newDirName');
+const confirmRenameBtn = document.getElementById('confirmRename');
+const cancelRenameBtn = document.getElementById('cancelRename');
 const closeBtn = document.querySelector('.close');
 
 // Auto-rotate state
@@ -74,6 +82,9 @@ window.addEventListener('click', (e) => {
   if (e.target === infoModal) {
     infoModal.style.display = 'none';
   }
+  if (e.target === renameModal) {
+    renameModal.style.display = 'none';
+  }
 });
 
 // Event listeners for info button
@@ -84,13 +95,121 @@ if (infoBtn) {
   });
 }
 
+// Close modal when clicking close button
+if (closeBtn) {
+  closeBtn.addEventListener('click', () => {
+    infoModal.style.display = 'none';
+    renameModal.style.display = 'none';
+  });
+}
+
+// Event listeners for rename button
+// Log all fetch requests for debugging
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+  console.log('[FETCH]', args[0], args[1]);
+  const response = await originalFetch(...args);
+  console.log('[FETCH RESPONSE]', args[0], response.status);
+  return response;
+};
+
+if (renameBtn) {
+  renameBtn.addEventListener('click', () => {
+    console.log('Rename button clicked, currentDirectoryPath:', currentDirectoryPath);
+    if (currentDirectoryPath) {
+      renameModal.style.display = 'block';
+      currentDirNameEl.textContent = currentDirectoryPath.split('/').pop() || currentDirectoryPath;
+      newDirNameInput.value = '';
+      newDirNameInput.focus();
+    } else {
+      console.warn('currentDirectoryPath is empty!');
+    }
+  });
+}
+
+if (confirmRenameBtn) {
+  confirmRenameBtn.addEventListener('click', async () => {
+    try {
+      console.log('confirmRenameBtn clicked');
+      const newName = newDirNameInput.value.trim();
+      console.log('New name:', JSON.stringify(newName));
+      
+      if (!newName) {
+        console.warn('New name is empty');
+        return;
+      }
+
+      // Normalize currentDirectoryPath: replace backslashes with forward slashes
+      const normalizedOldPath = currentDirectoryPath.replace(/\\/g, '/');
+      console.log('Rename attempt:', {
+        currentDirectoryPath,
+        normalizedOldPath,
+        newPath: newName
+      });
+
+      const response = await fetch('/api/rename-directory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          oldPath: normalizedOldPath,
+          newPath: newName
+        })
+      });
+
+      console.log('Rename response:', response.status, await response.clone().text());
+
+      if (response.ok) {
+        const result = await response.json();
+        renameModal.style.display = 'none';
+        newDirNameInput.value = '';
+
+        // Update currentDirectoryPath to the new name
+        currentDirectoryPath = newName.replace(/\\/g, '/');
+
+        // Reload directories to show the renamed directory
+        loadDirectories();
+        // Update the select to show the renamed directory
+        setTimeout(() => {
+          dirSelect.value = currentDirectoryPath;
+          loadImages(currentDirectoryPath);
+          
+          // Update URL to reflect the renamed directory
+          const url = new URL(window.location);
+          url.searchParams.set('dir', currentDirectoryPath);
+          window.history.pushState({}, '', url);
+        }, 300);
+      } else {
+        const error = await response.json();
+        const errorMsg = error.error || 'Failed to rename directory';
+        const debugInfo = error.requestedPath || error.fullSearchPath
+          ? `\n\nDebug: ${JSON.stringify(error, null, 2)}`
+          : '';
+        console.error('Rename error response:', errorMsg, debugInfo);
+        alert(`Error: ${errorMsg}${debugInfo}`);
+      }
+    } catch (error) {
+      console.error('Rename exception:', error);
+      alert('Error: ' + error.message);
+    }
+  });
+}
+
+if (cancelRenameBtn) {
+  cancelRenameBtn.addEventListener('click', () => {
+    renameModal.style.display = 'none';
+    newDirNameInput.value = '';
+  });
+}
+
 // Load directory list on startup
 async function loadDirectories() {
   // Give API server time to start
   await new Promise(resolve => setTimeout(resolve, 500));
-  
+
   try {
     const response = await fetch('/api/directories');
+    console.log('Directories API response:', response.status, await response.clone().text());
+    
     if (!response.ok) {
       if (response.status === 502) {
         throw new Error('Could not connect to API server. Make sure the Electron app is running.');
@@ -98,20 +217,23 @@ async function loadDirectories() {
       throw new Error('Failed to load directories');
     }
     const directories = await response.json();
+    console.log('Directories:', directories);
 
     if (directories.length > 0) {
       dirSelect.innerHTML = directories
         .map(dir => `<option value="${dir.path}">${dir.name}</option>`)
         .join('');
-      
+
       // Set selected directory from URL param
       const urlParams = new URLSearchParams(window.location.search);
       const dirParam = urlParams.get('dir') || directories[0].path;
       dirSelect.value = dirParam;
-      
+      currentDirectoryPath = dirParam;
+
       loadImages(dirParam);
     } else {
       dirSelect.innerHTML = '<option value=".">No directories found</option>';
+      currentDirectoryPath = '';
       imageInfo.textContent = 'No directories with files found in public/';
     }
   } catch (error) {
@@ -122,15 +244,24 @@ async function loadDirectories() {
 
 // Load image list from server
 async function loadImages(directory) {
+  // Normalize path: replace backslashes with forward slashes
+  const normalizedDir = directory.replace(/\\/g, '/');
+  console.log('loadImages called with directory:', directory, '->', normalizedDir);
+
   try {
-    const response = await fetch(`/api/images?dir=${encodeURIComponent(directory)}`);
+    const response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}`);
+    const responseText = await response.clone().text();
+    console.log('Images API response:', response.status, responseText.substring(0, 200));
+
     if (!response.ok) throw new Error('Failed to load images');
     imageList = await response.json();
+    console.log('imageList loaded:', imageList.length, 'items');
 
     if (imageList.length > 0) {
       currentIndex = 0;
       showImage(currentIndex);
     } else {
+      console.warn('No images found in directory');
       imageInfo.textContent = 'No files found in this directory';
       mediaWrapper.innerHTML = '';
     }
@@ -143,7 +274,11 @@ async function loadImages(directory) {
 
 // Display current file
 function showImage(index) {
-  if (imageList.length === 0) return;
+  console.log('showImage called with index:', index, 'imageList.length:', imageList.length);
+  if (imageList.length === 0) {
+    console.warn('imageList is empty');
+    return;
+  }
 
   // Wrap around
   if (index < 0) index = imageList.length - 1;
@@ -152,6 +287,7 @@ function showImage(index) {
   currentIndex = index;
   const filePath = imageList[currentIndex];
   const fileName = filePath.split('/').pop();
+  console.log('Displaying:', filePath, 'as', fileName);
 
   // Clear previous content
   mediaWrapper.innerHTML = '';
@@ -178,6 +314,11 @@ function showImage(index) {
 
 // Keyboard navigation
 function handleKeyDown(event) {
+  // Suppress navigation if rename modal is open
+  if (renameModal.style.display === 'block') {
+    return;
+  }
+
   switch (event.key) {
     case 'ArrowLeft':
     case 'a':
@@ -191,6 +332,12 @@ function handleKeyDown(event) {
       break;
     case 'Escape':
       mediaWrapper.innerHTML = '';
+      break;
+    case 'r':
+    case 'R':
+      if (renameBtn && currentDirectoryPath) {
+        renameBtn.click();
+      }
       break;
   }
 }
@@ -255,11 +402,14 @@ if (speedValue) {
 
 dirSelect.addEventListener('change', (e) => {
   const newDir = e.target.value;
+  console.log('Directory changed to:', newDir);
+  currentDirectoryPath = newDir;
   const url = new URL(window.location);
   url.searchParams.set('dir', newDir);
   window.history.pushState({}, '', url);
   stopAutoRotate(); // Stop auto-rotate when changing directories
-  loadImages(newDir);
+  // Normalize path when loading images
+  loadImages(newDir.replace(/\\/g, '/'));
 });
 document.addEventListener('keydown', handleKeyDown);
 
@@ -271,6 +421,7 @@ window.addEventListener('popstate', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const dirParam = urlParams.get('dir');
   if (dirParam) {
+    currentDirectoryPath = dirParam;
     loadImages(dirParam);
     dirSelect.value = dirParam;
   }
