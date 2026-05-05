@@ -238,7 +238,7 @@ The main window displays "Lite View is Online" instead of a browser view:
 
 - **Purpose**: Shows application status and server health
 - **Size**: 600×400 pixels
-- **Content**: 
+- **Content**:
   - "Lite View" header with gradient styling
   - Server status indicators (API and Vite)
   - Green badges for running services
@@ -246,3 +246,59 @@ The main window displays "Lite View is Online" instead of a browser view:
 
 - **When images load**: Images are served by the Vite dev server (port 5173), not embedded in the EXE
 - **Network access**: Use the IP shown in logs window with port 5173 for browser access to images
+
+## Recent Features
+
+### Dual Viewer Panels
+The application now supports **side-by-side viewers** (Left and Right) that can display different directories simultaneously:
+
+- **Independent navigation**: Each panel has its own prev/next buttons and keyboard controls
+- **Keyboard shortcuts**:
+  - Left panel: `A` or `ArrowLeft` to go previous
+  - Right panel: `D` or `ArrowRight` to go next
+- **Directory selection**: Each panel can show a different directory via dropdown selector
+- **Splitter**: Drag the center divider to resize panels (10-90% range)
+
+### Auto-Rotate Feature
+Each panel has **independent auto-rotate** functionality:
+
+- **Toggle auto-rotate**:
+  - Left panel: Check/uncheck "Auto-Rotate Left" in settings
+  - Right panel: Check/uncheck "Auto-Rotate Right" in settings
+- **Speed control**: Adjust rotation speed (1-10 seconds per image) using the slider
+- **Pause/Resume keyboard shortcuts**:
+  - `Q`: Toggle left panel auto-rotate
+  - `E`: Toggle right panel auto-rotate
+  - `Space`: Toggle current panel's auto-rotate
+
+### Directory Renaming
+You can **rename directories** directly from the application:
+
+1. Click the "Rename" button in a panel
+2. Enter the new directory name
+3. Press "Confirm" to apply
+
+The API endpoint `/api/rename-directory` handles the rename operation without requiring a restart.
+
+### URL Parameters
+Use URL parameters to open specific directories on startup:
+
+```
+http://localhost:5173/?dirLeft=nature&dirRight=vacations
+```
+
+Parameters:
+- `dirLeft`: Directory for the left viewer (defaults to first directory)
+- `dirRight`: Directory for the right viewer (defaults to second directory or first if only one exists)
+
+### Network Access Enhancements
+The logs window now shows:
+- **Local IP addresses** for accessing the app from other devices on your network
+- Both API server (port 3000) and Vite server (port 5173) endpoints
+- Click "Copy All" to easily share network information
+
+### Info Modal
+Click the "Info" button (question mark icon) in either panel to see:
+- Local IP addresses for network access
+- API server port (3000)
+- Quick access to network configuration info

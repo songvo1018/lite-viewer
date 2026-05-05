@@ -15,6 +15,9 @@ Electron-based media viewer with local network access, built with Vite and Elect
 - 📡 **API server** for image directory access
 - 📝 **Automatic log file creation** in user data directory
 - 💻 **Side navigation buttons** for mobile devices (replaces swipe gestures)
+- 🔄 **Dual viewer panels** - Left and Right viewers display different directories
+- 🔄 **Auto-rotate feature** - Independent slide show for each panel
+- ✏️ **Directory renaming** - Rename folders directly from the app
 
 ## Prerequisites
 
@@ -161,9 +164,37 @@ http://192.168.0.139:5173/?dir=nature
 
 | Key | Action |
 |-----|--------|
-| `ArrowLeft` or `A` | Previous image/video |
-| `ArrowRight` or `D` | Next image/video |
+| `ArrowLeft` or `A` | Previous image/video (left panel) |
+| `ArrowRight` or `D` | Next image/video (right panel) |
+| `Q` | Toggle auto-rotate (left panel) |
+| `E` | Toggle auto-rotate (right panel) |
+| `Space` | Pause/Resume current panel's auto-rotate |
 | `Esc` | Hide the media viewer (shows only navigation buttons) |
+
+### Features Overview
+
+#### Dual Viewer Panels
+The application supports **side-by-side viewers** that can display different directories simultaneously:
+
+- **Independent navigation**: Each panel has its own prev/next buttons and keyboard controls
+- **Directory selection**: Each panel can show a different directory via dropdown selector
+- **Splitter**: Drag the center divider to resize panels (10-90% range)
+
+#### Auto-Rotate Feature
+Each panel has **independent auto-rotate** functionality:
+
+- **Toggle auto-rotate**: Check/uncheck in panel settings or use keyboard shortcuts
+- **Speed control**: Adjust rotation speed (1-10 seconds per image) using the slider
+- **Keyboard shortcuts**: `Q` (left), `E` (right), `Space` (current panel)
+
+#### Directory Renaming
+You can **rename directories** directly from the application:
+
+1. Click the "Rename" button in a panel
+2. Enter the new directory name
+3. Press "Confirm" to apply
+
+The directory is renamed without requiring a restart.
 
 #### Touch (Mobile)
 
@@ -318,6 +349,42 @@ Example response:
   {"name": "vacations", "path": "vacations"}
 ]
 ```
+
+### GET `/api/ips`
+
+Returns JSON array of local IP addresses for network access.
+
+Example response:
+```json
+[
+  "192.168.0.139",
+  "10.0.0.5"
+]
+```
+
+### POST `/api/rename-directory`
+
+Renames a directory. Requires JSON body with `oldPath` and `newPath`.
+
+**Request body:**
+```json
+{
+  "oldPath": "nature",
+  "newPath": "nature-2024"
+}
+```
+
+**Success response:**
+```json
+{
+  "success": true,
+  "newPath": "nature-2024"
+}
+```
+
+**Error responses:**
+- `404` - Directory not found
+- `409` - Directory with new name already exists
 
 ## Troubleshooting
 

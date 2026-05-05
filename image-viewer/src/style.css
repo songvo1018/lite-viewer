@@ -14,114 +14,192 @@ body {
 
 #app {
   display: flex;
-  flex-direction: column;
   width: 100%;
   height: 100%;
 }
 
-#directorySelector {
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.8);
+/* Viewer Panel Styles */
+.viewer-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
 }
 
-#dirSelect {
-  padding: 8px 16px;
-  font-size: 14px;
-  border: none;
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid #333;
+}
+
+.panel-title {
+  font-size: 12px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dir-select {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #444;
   border-radius: 4px;
-  background: #333;
+  background: #2a2a2a;
   color: #fff;
   cursor: pointer;
   outline: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M10.29 4.29L6 8.59 1.71 4.29a1 1 0 00-1.41 1.42l4.29 4.29a1 1 0 001.42 0l4.29-4.29a1 1 0 000-1.42z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
 }
 
-#dirSelect:hover {
-  background: #444;
+.dir-select:hover {
+  border-color: #555;
+  background: #333;
 }
 
-#dirSelect option {
+.dir-select option {
   background: #222;
   color: #fff;
 }
 
-#navButtons {
+.image-container {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.8);
+  position: relative;
+  min-height: 0;
+  padding: 10px;
+  overflow: hidden;
 }
 
-/* Side navigation buttons for mobile */
-#prevBtnMobile,
-#nextBtnMobile {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 64px;
-  height: 64px;
+.media-wrapper {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.media-wrapper img,
+.media-wrapper video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  width: 100%;
+}
+
+.image-info {
+  padding: 6px 12px;
   background: rgba(0, 0, 0, 0.7);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, opacity 0.3s;
   color: #fff;
-  border-radius: 8px;
-  z-index: 100;
-  padding: 0;
+  border-radius: 15px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-top: 8px;
 }
 
-#prevBtnMobile {
-  left: 20px;
+.panel-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid #333;
 }
 
-#nextBtnMobile {
-  right: 20px;
-}
-
-#prevBtnMobile:hover,
-#nextBtnMobile:hover {
-  background: rgba(0, 0, 0, 0.9);
-}
-
-#prevBtnMobile svg,
-#nextBtnMobile svg {
-  width: 40px;
-  height: 40px;
-}
-
+/* Navigation buttons */
 .nav-btn {
-  width: 56px;
-  height: 56px;
-  background: rgba(0, 0, 0, 0.5);
-  border: none;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #444;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s;
   color: #fff;
-  padding: 0;
   border-radius: 6px;
+  padding: 0;
 }
 
 .nav-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.9);
+  border-color: #666;
 }
 
-.nav-btn.info:hover {
-  background: rgba(66, 133, 244, 0.6);
-}
-
-.nav-btn.rename:hover {
-  background: rgba(255, 165, 0, 0.6);
+.nav-btn:active {
+  background: rgba(0, 0, 0, 1);
 }
 
 .nav-btn svg {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
+}
+
+/* Auto-rotate button styles - removed, using modal controls instead */
+
+/* Info and Rename button styles */
+.nav-btn.info {
+  background: rgba(66, 133, 244, 0.2);
+  border-color: rgba(66, 133, 244, 0.3);
+}
+
+.nav-btn.info:hover {
+  background: rgba(66, 133, 244, 0.4);
+  border-color: rgba(66, 133, 244, 0.5);
+}
+
+.nav-btn.rename {
+  background: rgba(255, 165, 0, 0.2);
+  border-color: rgba(255, 165, 0, 0.3);
+}
+
+.nav-btn.rename:hover {
+  background: rgba(255, 165, 0, 0.4);
+  border-color: rgba(255, 165, 0, 0.5);
+}
+
+/* Splitter styles */
+.splitter {
+  width: 4px;
+  background: #222;
+  cursor: col-resize;
+  transition: background 0.2s;
+  position: relative;
+  z-index: 100;
+}
+
+.splitter:hover,
+.splitter.active {
+  background: #4a90e2;
+}
+
+.splitter::after {
+  content: '☰';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #555;
+  font-size: 14px;
+  pointer-events: none;
 }
 
 /* Info Modal */
@@ -244,186 +322,106 @@ body {
   cursor: pointer;
 }
 
-#imageContainer {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 0;
-  padding: 10px 0;
-}
-
-#mediaWrapper {
-  flex: 1;
+/* Modal positioning */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
   width: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
 }
 
-#mediaWrapper img,
-#mediaWrapper video {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-  width: 100%;
+.modal-content {
+  background-color: #1a1a1a;
+  margin: 10% auto;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
 }
 
-#imageInfo {
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.7);
+.modal-content h2 {
   color: #fff;
-  border-radius: 20px;
-  font-size: 13px;
-  white-space: nowrap;
-  max-width: 90%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 8px;
+  margin-bottom: 15px;
+  font-size: 24px;
 }
 
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  body {
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  #app {
-    flex-direction: column;
-  }
-
-  #directorySelector {
-    padding: 6px;
-    text-align: center;
-  }
-
-  #dirSelect {
-    padding: 6px 12px;
-    font-size: 13px;
-    width: 100%;
-    max-width: 300px;
-  }
-
-  #navButtons {
-    padding: 6px;
-    gap: 12px;
-  }
-
-  .nav-btn {
-    width: 48px;
-    height: 48px;
-  }
-
-  .nav-btn svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  #imageContainer {
-    padding: 8px 0;
-  }
-
-  #mediaWrapper {
-    max-height: 60vh;
-  }
-
-  #imageInfo {
-    font-size: 12px;
-    padding: 6px 12px;
-    max-width: 95%;
-  }
-
-  /* Hide navigation on very small screens - use swipe instead */
-  @media (max-width: 480px) {
-    #navButtons {
-      display: none;
-    }
-
-    #mediaWrapper {
-      max-height: 70vh;
-    }
-  }
+.modal-content p {
+  color: #ccc;
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-/* Landscape mode adjustments */
-@media (max-width: 850px) and (orientation: landscape) {
-  #app {
-    flex-direction: row;
-  }
-
-  #directorySelector {
-    display: none;
-  }
-
-  #navButtons {
-    flex-direction: column;
-    gap: 12px;
-    width: 60px;
-    padding: 8px 4px;
-  }
-
-  .nav-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-  }
-
-  .nav-btn svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  #imageContainer {
-    flex: 1;
-    padding: 0;
-    justify-content: center;
-  }
-
-  #mediaWrapper {
-    max-height: 90vh;
-  }
-
-  #imageInfo {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    padding: 6px 12px;
-    max-width: 90%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.modal-content strong {
+  color: #4a90e2;
 }
 
-/* Desktop: hide side buttons */
-@media (min-width: 769px) {
-  #prevBtnMobile,
-  #nextBtnMobile {
-    display: none !important;
-  }
+/* Rename Modal Specific Styles */
+#renameModal .modal-content h2 {
+  margin-bottom: 10px;
 }
 
-/* Mobile: hide info button (no room for extra button) */
-@media (max-width: 768px) {
-  #infoBtn {
-    display: none !important;
-  }
-  #navButtons {
-    display: none !important;
-  }
+#renameModal .modal-content p {
+  margin-bottom: 15px;
+  color: #aaa;
 }
 
-/* Timer dropdown */
+#renameModal .modal-content input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #2a2a2a;
+  color: #fff;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#renameModal .modal-content input[type="text"]:focus {
+  border-color: #4a90e2;
+}
+
+#renameModal .modal-content button {
+  margin-top: 10px;
+}
+
+#renameModal .modal-content button:last-child {
+  margin-left: 10px;
+}
+
+.ip-list {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.ip-item {
+  background: #333;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 18px;
+  color: #4a90e2;
+  border: 1px solid #444;
+}
+
+.ip-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Auto-rotate styles */
 .timer {
   position: relative;
   margin-left: 8px;
@@ -532,4 +530,89 @@ body {
   font-size: 12px;
   color: #4caf50;
   font-weight: bold;
+}
+
+/* Desktop: show splitter and both panels */
+@media (min-width: 769px) {
+  .desktop-only {
+    /* display: block !important; */
+  }
+  
+  #app {
+    flex-direction: row;
+  }
+  
+  .viewer-panel {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+  }
+}
+
+/* Mobile: hide splitter and right panel, show only left panel full screen */
+@media (max-width: 768px) {
+  #app {
+    flex-direction: column;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .viewer-panel {
+    flex: 1;
+    min-height: 0;
+  }
+  
+  #leftPanel {
+    flex: 1;
+  }
+
+  .panel-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .panel-title {
+    display: none;
+  }
+
+  .panel-controls {
+    padding: 8px;
+  }
+
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .nav-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .image-container {
+    padding: 6px;
+  }
+}
+
+/* Landscape mode for tablets */
+@media (max-width: 850px) and (orientation: landscape) {
+  .panel-title {
+    display: none;
+  }
+
+  .panel-controls {
+    padding: 6px;
+  }
+
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dir-select {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
 }

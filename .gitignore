@@ -1,0 +1,7 @@
+.qwen
+image-viewer/node_modules
+image-viewer/public/*
+image-viewer/dist
+image-viewer/release
+image-viewer/*.log
+*.7z

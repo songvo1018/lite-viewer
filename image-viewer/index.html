@@ -3,48 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Viewer</title>
+  <title>Image Viewer - Split Screen</title>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
   <div id="app">
-    <div id="directorySelector">
-      <select id="dirSelect">
-        <option value=".">Loading directories...</option>
-      </select>
+    <!-- Left viewer (always visible) -->
+    <div class="viewer-panel" id="leftPanel">
+      <div class="panel-header">
+        <select class="dir-select" id="dirSelectLeft">
+          <option value=".">Loading directories...</option>
+        </select>
+        <div class="panel-title">Left View</div>
+      </div>
+      <div class="image-container">
+        <div class="media-wrapper" id="mediaWrapperLeft"></div>
+        <div class="image-info" id="imageInfoLeft"></div>
+      </div>
+      <div class="panel-controls">
+        <button class="nav-btn prev" id="prevBtnLeft" aria-label="Previous image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button class="nav-btn next" id="nextBtnLeft" aria-label="Next image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+        <button class="nav-btn info" id="infoBtnLeft" aria-label="Network info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+        </button>
+        <button class="nav-btn rename" id="renameBtnLeft" aria-label="Rename directory">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div id="imageContainer">
-      <div id="mediaWrapper"></div>
-      <div id="imageInfo"></div>
+    <!-- Right viewer (desktop only) -->
+    <div class="viewer-panel desktop-only" id="rightPanel">
+      <div class="panel-header">
+        <select class="dir-select" id="dirSelectRight">
+          <option value=".">Loading directories...</option>
+        </select>
+        <div class="panel-title">Right View</div>
+      </div>
+      <div class="image-container">
+        <div class="media-wrapper" id="mediaWrapperRight"></div>
+        <div class="image-info" id="imageInfoRight"></div>
+      </div>
+      <div class="panel-controls">
+        <button class="nav-btn prev" id="prevBtnRight" aria-label="Previous image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button class="nav-btn next" id="nextBtnRight" aria-label="Next image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+        <button class="nav-btn info" id="infoBtnRight" aria-label="Network info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+        </button>
+        <button class="nav-btn rename" id="renameBtnRight" aria-label="Rename directory">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <button id="infoBtn" class="nav-btn info" aria-label="Network info">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M12 16v-4"/>
-        <path d="M12 8h.01"/>
-      </svg>
-    </button>
-
-    <button id="renameBtn" class="nav-btn rename" aria-label="Rename directory">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-      </svg>
-    </button>
-
-    <button id="prevBtnMobile" class="nav-btn prev" aria-label="Previous image">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M15 18l-6-6 6-6"/>
-      </svg>
-    </button>
-
-    <button id="nextBtnMobile" class="nav-btn next" aria-label="Next image">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 18l6-6-6-6"/>
-      </svg>
-    </button>
+    <!-- Splitter (desktop only) -->
+    <div class="splitter desktop-only" id="splitter"></div>
   </div>
 
   <div id="infoModal" class="modal">
@@ -55,18 +98,33 @@
       <div id="ipList" class="ip-list"></div>
       <p>Use port <strong>3000</strong> to access the API directly</p>
 
-      <h3>Auto-Rotate Settings</h3>
+      <h3>Left Panel Auto-Rotate</h3>
       <div class="setting-row">
         <label class="checkbox-label">
-          <input type="checkbox" id="autoRotateCheck">
+          <input type="checkbox" id="autoRotateCheckLeft">
           <span>Автопрокрутка изображений</span>
         </label>
       </div>
       <div class="range-control">
-        <label for="speedRange">Скорость смены:</label>
+        <label for="speedRangeLeft">Скорость смены:</label>
         <div class="range-container">
-          <input type="range" id="speedRange" min="0.5" max="10" step="0.5" value="2">
-          <span id="speedValue" class="range-value">2 сек</span>
+          <input type="range" id="speedRangeLeft" min="0.5" max="10" step="0.5" value="2">
+          <span id="speedValueLeft" class="range-value">2 сек</span>
+        </div>
+      </div>
+
+      <h3>Right Panel Auto-Rotate</h3>
+      <div class="setting-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="autoRotateCheckRight">
+          <span>Автопрокрутка изображений</span>
+        </label>
+      </div>
+      <div class="range-control">
+        <label for="speedRangeRight">Скорость смены:</label>
+        <div class="range-container">
+          <input type="range" id="speedRangeRight" min="0.5" max="10" step="0.5" value="2">
+          <span id="speedValueRight" class="range-value">2 сек</span>
         </div>
       </div>
     </div>

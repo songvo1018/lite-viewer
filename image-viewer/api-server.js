@@ -145,8 +145,24 @@ function createApiServer() {
             res.end(JSON.stringify({ success: true, newPath: normalizedNewPath }));
           } catch (error) {
             logMessage(`Failed to rename directory: ${error.message}`, 'error');
+            
+            // Check for specific error types
+            const errorMessage = error.message || 'Failed to rename directory';
+            let userMessage = errorMessage;
+            
+            if (errorMessage.includes('EPERM') || errorMessage.includes('operation not permitted')) {
+              userMessage = `Operation not permitted. 
+- Source path: ${oldFullPath}
+- Target path: ${newFullPath}
+- Make sure the directory is not in use, you have permission to rename it, and the target directory does not exist.`;
+            } else if (errorMessage.includes('ENOENT')) {
+              userMessage = 'Directory not found.';
+            } else if (errorMessage.includes('EEXIST')) {
+              userMessage = 'A directory with this name already exists.';
+            }
+            
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: error.message }));
+            res.end(JSON.stringify({ error: userMessage, details: errorMessage, oldPath: oldFullPath, newPath: newFullPath }));
           }
         });
         return;
