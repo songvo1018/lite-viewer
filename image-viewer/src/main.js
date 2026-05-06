@@ -23,6 +23,12 @@ const dirSelectRight = document.getElementById('dirSelectRight');
 // Splitter element
 const splitter = document.getElementById('splitter');
 
+// Info panel elements
+const infoPanel = document.getElementById('infoPanel');
+const infoBtnLeft = document.getElementById('infoBtnLeft');
+const infoBtnRight = document.getElementById('infoBtnRight');
+const closeInfoPanelBtn = document.getElementById('closeInfoPanel');
+
 // Current state for both viewers
 let leftImageList = [];
 let rightImageList = [];
@@ -134,24 +140,14 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// Event listeners for info button (left panel)
-const infoBtnLeft = document.getElementById('infoBtnLeft');
+// Event listeners for info button (left panel) - toggle info panel
 if (infoBtnLeft) {
-  infoBtnLeft.addEventListener('click', () => {
-    const infoModal = document.getElementById('infoModal');
-    infoModal.style.display = 'block';
-    loadIPs();
-  });
+  infoBtnLeft.addEventListener('click', () => toggleInfoPanel());
 }
 
-// Event listeners for info button (right panel)
-const infoBtnRight = document.getElementById('infoBtnRight');
+// Event listeners for info button (right panel) - toggle info panel
 if (infoBtnRight) {
-  infoBtnRight.addEventListener('click', () => {
-    const infoModal = document.getElementById('infoModal');
-    infoModal.style.display = 'block';
-    loadIPs();
-  });
+  infoBtnRight.addEventListener('click', () => toggleInfoPanel());
 }
 
 // Close modal when clicking close button
@@ -497,8 +493,8 @@ function handleKeyDown(event) {
     return;
   }
 
-  // Q: Pause/Resume left panel auto-rotate
-  if (event.key === 'q' || event.key === 'Q') {
+  // Q/Й: Pause/Resume left panel auto-rotate
+  if (event.key === 'q' || event.key === 'Q' || event.key === 'й' || event.key === 'Й') {
     if (leftAutoRotateInterval) {
       clearInterval(leftAutoRotateInterval);
       leftAutoRotateInterval = null;
@@ -507,8 +503,8 @@ function handleKeyDown(event) {
     }
   }
 
-  // E: Pause/Resume right panel auto-rotate
-  if (event.key === 'e' || event.key === 'E') {
+  // E/Ц: Pause/Resume right panel auto-rotate
+  if (event.key === 'e' || event.key === 'E' || event.key === 'ц' || event.key === 'Ц') {
     if (rightAutoRotateInterval) {
       clearInterval(rightAutoRotateInterval);
       rightAutoRotateInterval = null;
@@ -538,24 +534,42 @@ function handleKeyDown(event) {
     }
   }
 
-  // Left viewer navigation (A, Left Arrow)
-  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+  // Left viewer navigation (A, Left Arrow, Ф)
+  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A' || event.key === 'ф' || event.key === 'Ф') {
     if (leftImageList.length > 0) {
       showImageLeft(leftCurrentIndex - 1);
     }
   }
 
-  // Right viewer navigation (D, Right Arrow)
-  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+  // Right viewer navigation (D, Right Arrow, Ж, В)
+  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D' || event.key === 'ж' || event.key === 'В') {
     if (rightImageList.length > 0) {
       showImageRight(rightCurrentIndex + 1);
     }
   }
 
-  // Escape to clear
+  // Escape to hide info panel or clear media viewer
   if (event.key === 'Escape') {
+    if (infoPanel && !infoPanel.classList.contains('hidden')) {
+      hideInfoPanel();
+      return;
+    }
     mediaWrapperLeft.innerHTML = '';
     mediaWrapperRight.innerHTML = '';
+  }
+
+  // Z/Я: Move left panel image to basket
+  if (event.key === 'z' || event.key === 'Z' || event.key === 'я' || event.key === 'Я') {
+    event.preventDefault();
+    moveToLeftBasket();
+    return;
+  }
+
+  // C/С: Move right panel image to basket
+  if (event.key === 'c' || event.key === 'C' || event.key === 'с' || event.key === 'С') {
+    event.preventDefault();
+    moveToRightBasket();
+    return;
   }
 }
 
@@ -566,6 +580,9 @@ if (prevBtnLeft) {
 if (nextBtnLeft) {
   nextBtnLeft.addEventListener('click', () => showImageLeft(leftCurrentIndex + 1));
 }
+if (trashBtnLeft) {
+  trashBtnLeft.addEventListener('click', () => moveToLeftBasket());
+}
 
 // Event listeners for right viewer
 if (prevBtnRight) {
@@ -573,6 +590,18 @@ if (prevBtnRight) {
 }
 if (nextBtnRight) {
   nextBtnRight.addEventListener('click', () => showImageRight(rightCurrentIndex + 1));
+}
+if (trashBtnRight) {
+  trashBtnRight.addEventListener('click', () => moveToRightBasket());
+}
+if (infoBtnLeft) {
+  infoBtnLeft.addEventListener('click', () => toggleInfoPanel());
+}
+if (infoBtnRight) {
+  infoBtnRight.addEventListener('click', () => toggleInfoPanel());
+}
+if (closeInfoPanelBtn) {
+  closeInfoPanelBtn.addEventListener('click', () => hideInfoPanel());
 }
 
 // Directory change handlers
@@ -763,4 +792,107 @@ if (speedRangeRight) {
   });
 }
 
-updateTimerDisplay();
+// ============================================
+// MOVE TO BASKET FUNCTIONALITY
+// ============================================
+
+// Move image to basket for left panel
+async function moveToLeftBasket() {
+  if (leftImageList.length === 0 || leftCurrentIndex < 0) return;
+
+  const currentFile = leftImageList[leftCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Move to basket (left):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/move-to-basket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+    
+    console.log('Response status:', response.status);
+
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log('Moved to basket (left):', result.newPath);
+      
+      // Remove from current list
+      leftImageList.splice(leftCurrentIndex, 1);
+      
+      // If list is empty, reload directories
+      if (leftImageList.length === 0) {
+        loadDirectories();
+      } else {
+        // Show next image (wrap around if needed)
+        if (leftCurrentIndex >= leftImageList.length) {
+          leftCurrentIndex = 0;
+        }
+        showImageLeft(leftCurrentIndex);
+      }
+    } else {
+      alert(`Error: ${result.error || 'Failed to move to basket'}`);
+    }
+  } catch (error) {
+    console.error('Move to basket (left) error:', error);
+    alert('Error: ' + error.message);
+  }
+}
+
+// Move image to basket for right panel
+async function moveToRightBasket() {
+  if (rightImageList.length === 0 || rightCurrentIndex < 0) return;
+
+  const currentFile = rightImageList[rightCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Move to basket (right):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/move-to-basket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log('Moved to basket (right):', result.newPath);
+      
+      // Remove from current list
+      rightImageList.splice(rightCurrentIndex, 1);
+      
+      // If list is empty, reload directories
+      if (rightImageList.length === 0) {
+        loadDirectories();
+      } else {
+        // Show next image (wrap around if needed)
+        if (rightCurrentIndex >= rightImageList.length) {
+          rightCurrentIndex = 0;
+        }
+        showImageRight(rightCurrentIndex);
+      }
+    } else {
+      alert(`Error: ${result.error || 'Failed to move to basket'}`);
+    }
+  } catch (error) {
+    console.error('Move to basket (right) error:', error);
+    alert('Error: ' + error.message);
+  }
+}
+
+// Info Panel Functions
+function toggleInfoPanel() {
+  if (infoPanel) {
+    infoPanel.classList.toggle('hidden');
+  }
+}
+
+function hideInfoPanel() {
+  if (infoPanel) {
+    infoPanel.classList.add('hidden');
+  }
+}

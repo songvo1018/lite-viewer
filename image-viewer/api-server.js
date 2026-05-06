@@ -68,7 +68,9 @@ function createApiServer() {
             })
             .map(entry => {
               const relativePath = path.relative(PUBLIC_DIR, path.join(fullPath, entry));
-              return `/${relativePath}`;
+              // Normalize path to forward slashes for web compatibility
+              const normalizedPath = relativePath.replace(/\\/g, '/');
+              return `/${normalizedPath}`;
             });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -163,6 +165,68 @@ function createApiServer() {
             
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: userMessage, details: errorMessage, oldPath: oldFullPath, newPath: newFullPath }));
+          }
+        });
+        return;
+      } else if (req.url.startsWith('/api/move-to-basket') && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', () => {
+          try {
+            const { filePath } = JSON.parse(body);
+
+            // Normalize path - convert backslashes to forward slashes and remove leading/trailing slashes
+            const normalizedPath = filePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+            
+            // Build path
+            const sourceFullPath = path.join(PUBLIC_DIR, normalizedPath);
+            
+            logMessage(`Move to basket request: ${normalizedPath}`, 'info');
+            logMessage(`Source path: ${sourceFullPath}`, 'info');
+            logMessage(`Source path exists: ${fs.existsSync(sourceFullPath)}`, 'info');
+
+            if (!fs.existsSync(sourceFullPath)) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'File not found' }));
+              return;
+            }
+
+            // Create basket directory if it doesn't exist
+            const basketDir = path.join(PUBLIC_DIR, 'basket');
+            if (!fs.existsSync(basketDir)) {
+              fs.mkdirSync(basketDir, { recursive: true });
+              logMessage(`Created basket directory: ${basketDir}`, 'info');
+            }
+
+            const fileName = path.basename(normalizedPath);
+            const destFullPath = path.join(basketDir, fileName);
+
+            // Check if file already exists in basket
+            let destPath = destFullPath;
+            let counter = 1;
+            while (fs.existsSync(destPath)) {
+              const nameWithoutExt = path.basename(normalizedPath, path.extname(normalizedPath));
+              const ext = path.extname(normalizedPath);
+              destPath = path.join(basketDir, `${nameWithoutExt}_${counter}${ext}`);
+              counter++;
+            }
+
+            // Move the file
+            fs.renameSync(sourceFullPath, destPath);
+
+            logMessage(`Moved to basket: ${normalizedPath} -> ${path.relative(PUBLIC_DIR, destPath)}`, 'success');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              oldPath: normalizedPath,
+              newPath: path.relative(PUBLIC_DIR, destPath)
+            }));
+          } catch (error) {
+            logMessage(`Failed to move to basket: ${error.message}`, 'error');
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
           }
         });
         return;

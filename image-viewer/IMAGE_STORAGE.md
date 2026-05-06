@@ -280,6 +280,28 @@ You can **rename directories** directly from the application:
 
 The API endpoint `/api/rename-directory` handles the rename operation without requiring a restart.
 
+### Move to Basket
+Each panel has a **trash button** to move images to a `basket/` directory:
+
+- **Trash button** - Red trash icon button (4th button in panel controls)
+- **Keyboard shortcuts**:
+  - `Z` or `Я`: Move current image from left panel to basket
+  - `C` or `С`: Move current image from right panel to basket
+
+**How it works:**
+1. Click trash button or press Z/C/Я/С key
+2. Image is moved to `public/basket/` directory
+3. File name is preserved (with counter suffix if duplicate exists)
+4. After successful move, the next image is automatically displayed
+5. If no images remain, directories are reloaded
+
+**API endpoint:** `POST /api/move-to-basket`
+```json
+{
+  "filePath": "/nature/image.jpg"
+}
+```
+
 ### URL Parameters
 Use URL parameters to open specific directories on startup:
 
@@ -297,8 +319,8 @@ The logs window now shows:
 - Both API server (port 3000) and Vite server (port 5173) endpoints
 - Click "Copy All" to easily share network information
 
-### Info Modal
-Click the "Info" button (question mark icon) in either panel to see:
-- Local IP addresses for network access
-- API server port (3000)
-- Quick access to network configuration info
+### Info Panel
+Click the "Info" button (question mark icon) in either panel to show a floating **info panel** with all keyboard shortcuts:
+- Toggle panel with `?` or click info button
+- Hide panel with `Hide` button or `Escape`
+- Panel shows all keyboard shortcuts for both English and Russian layouts

@@ -169,6 +169,8 @@ http://192.168.0.139:5173/?dir=nature
 | `Q` | Toggle auto-rotate (left panel) |
 | `E` | Toggle auto-rotate (right panel) |
 | `Space` | Pause/Resume current panel's auto-rotate |
+| `Z` | Move to basket (left panel) |
+| `C` | Move to basket (right panel) |
 | `Esc` | Hide the media viewer (shows only navigation buttons) |
 
 ### Features Overview
@@ -195,6 +197,21 @@ You can **rename directories** directly from the application:
 3. Press "Confirm" to apply
 
 The directory is renamed without requiring a restart.
+
+#### Move to Basket
+Each panel has a **trash button** to move images to a `basket/` directory:
+
+- **Trash button** - Red trash icon button (4th button in panel controls)
+- **Keyboard shortcuts**:
+  - `Z`: Move current image from left panel to basket
+  - `C`: Move current image from right panel to basket
+
+**How it works:**
+1. Click trash button or press Z/C key
+2. Image is moved to `public/basket/` directory
+3. File name is preserved (with counter suffix if duplicate exists)
+4. After successful move, the next image is automatically displayed
+5. If no images remain, directories are reloaded
 
 #### Touch (Mobile)
 

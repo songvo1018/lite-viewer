@@ -26,6 +26,15 @@ export default defineConfig(({ mode }) => {
         '/api/rename-directory': {
           target: 'http://127.0.0.1:3000',
           changeOrigin: true
+        },
+        '/api/move-to-basket': {
+          target: 'http://127.0.0.1:3000',
+          changeOrigin: true,
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              console.log('[VITE PROXY] Proxying to:', 'http://127.0.0.1:3000' + req.url);
+            });
+          }
         }
       }
     },

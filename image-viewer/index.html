@@ -31,6 +31,13 @@
             <path d="M9 18l6-6-6-6"/>
           </svg>
         </button>
+        <button class="nav-btn trash" id="trashBtnLeft" aria-label="Move to basket">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
         <button class="nav-btn info" id="infoBtnLeft" aria-label="Network info">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
@@ -68,6 +75,13 @@
         <button class="nav-btn next" id="nextBtnRight" aria-label="Next image">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+        <button class="nav-btn trash" id="trashBtnRight" aria-label="Move to basket">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
           </svg>
         </button>
         <button class="nav-btn info" id="infoBtnRight" aria-label="Network info">
@@ -141,6 +155,48 @@
       </div>
       <button id="confirmRename" style="padding: 12px 24px; font-size: 16px; background: #4a90e2; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s;">Rename</button>
       <button id="cancelRename" style="padding: 12px 24px; font-size: 16px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-left: 10px; transition: background 0.2s;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Info panel with keyboard shortcuts -->
+  <div id="infoPanel" class="info-panel">
+    <div class="info-content">
+      <h3>Keyboard Shortcuts</h3>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-key">Q</span>
+        <span class="shortcut-desc">Toggle auto-rotate (left panel)</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">E</span>
+        <span class="shortcut-desc">Toggle auto-rotate (right panel)</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">Space</span>
+        <span class="shortcut-desc">Pause/Resume current panel</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">A / Ф</span>
+        <span class="shortcut-desc">Previous image (left panel)</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">D / Ж / В</span>
+        <span class="shortcut-desc">Next image (right panel)</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">Z / Я</span>
+        <span class="shortcut-desc">Move to basket (left panel)</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">C / С</span>
+        <span class="shortcut-desc">Move to basket (right panel)</span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-key">Esc</span>
+        <span class="shortcut-desc">Clear media viewer</span>
+      </div>
+      
+      <button id="closeInfoPanel" class="info-close-btn">Hide</button>
     </div>
   </div>
 
