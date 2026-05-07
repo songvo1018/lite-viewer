@@ -49,6 +49,7 @@ function createApiServer() {
       if (req.url.startsWith('/api/images')) {
         const urlParams = new URLSearchParams(req.url.split('?')[1]);
         const dir = urlParams.get('dir') || '.';
+        const isRecursiveDirectoryMode = urlParams.get('isRecursiveDirectoryMode') === 'true';
 
         const fullPath = dir === '.' ? PUBLIC_DIR : path.join(PUBLIC_DIR, dir);
 
@@ -59,7 +60,8 @@ function createApiServer() {
             return;
           }
 
-          const entries = fs.readdirSync(fullPath);
+          const entries = fs.readdirSync(fullPath, { recursive: isRecursiveDirectoryMode });
+
           const files = entries
             .filter(entry => {
               const filePath = path.join(fullPath, entry);

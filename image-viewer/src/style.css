@@ -214,7 +214,7 @@ body {
 
 /* Info Modal */
 .modal {
-  display: none;
+  display: block;
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -332,6 +332,13 @@ body {
   cursor: pointer;
 }
 
+.hidden {
+  display: none !important;
+}
+/* #infoModal {
+  display: block;
+} */
+
 /* Modal positioning */
 .modal {
   display: none;
@@ -344,6 +351,10 @@ body {
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
+}
+
+.info-modal {
+  display: block;
 }
 
 .modal-content {

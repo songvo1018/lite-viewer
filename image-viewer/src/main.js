@@ -133,30 +133,32 @@ window.addEventListener('click', (e) => {
   const renameModal = document.getElementById('renameModal');
   
   if (e.target === infoModal) {
-    infoModal.style.display = 'none';
+    infoModal.classList.toggle("hidden");
   }
   if (e.target === renameModal) {
     renameModal.style.display = 'none';
   }
 });
 
-// Event listeners for info button (left panel) - toggle info panel
-if (infoBtnLeft) {
-  infoBtnLeft.addEventListener('click', () => toggleInfoPanel());
-}
+// // Event listeners for info button (left panel) - toggle info panel
+// if (infoBtnLeft) {
+//   infoBtnLeft.addEventListener('click', () => toggleInfoPanel());
+// }
 
-// Event listeners for info button (right panel) - toggle info panel
-if (infoBtnRight) {
-  infoBtnRight.addEventListener('click', () => toggleInfoPanel());
-}
+// // Event listeners for info button (right panel) - toggle info panel
+// if (infoBtnRight) {
+//   infoBtnRight.addEventListener('click', () => toggleInfoPanel());
+// }
+
+const infoModal = document.getElementById('infoModal');
 
 // Close modal when clicking close button
 const closeBtn = document.querySelector('.close');
 if (closeBtn) {
   closeBtn.addEventListener('click', () => {
-    const infoModal = document.getElementById('infoModal');
+    infoModal = document.getElementById('infoModal');
     const renameModal = document.getElementById('renameModal');
-    infoModal.style.display = 'none';
+    infoModal.classList.toggle("hidden");
     renameModal.style.display = 'none';
   });
 }
@@ -282,7 +284,7 @@ async function loadDirectories() {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   try {
-    const response = await fetch('/api/directories');
+    const response = await fetch(`/api/directories`);
     console.log('Directories API response:', response.status, await response.clone().text());
 
     if (!response.ok) {
@@ -340,7 +342,7 @@ async function loadImagesLeft(directory) {
   console.log('loadImagesLeft called with directory:', directory, '->', normalizedDir);
 
   try {
-    const response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}`);
+    let response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}`);
     const responseText = await response.clone().text();
     console.log('Images API response (left):', response.status, responseText.substring(0, 200));
 
@@ -370,7 +372,8 @@ async function loadImagesRight(directory) {
   console.log('loadImagesRight called with directory:', directory, '->', normalizedDir);
 
   try {
-    const response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}`);
+    console.log(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}`)
+    let response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}`);
     const responseText = await response.clone().text();
     console.log('Images API response (right):', response.status, responseText.substring(0, 200));
 
@@ -595,7 +598,7 @@ if (trashBtnRight) {
   trashBtnRight.addEventListener('click', () => moveToRightBasket());
 }
 if (infoBtnLeft) {
-  infoBtnLeft.addEventListener('click', () => toggleInfoPanel());
+  infoBtnLeft.addEventListener('click', () => toggleInfoModal());
 }
 if (infoBtnRight) {
   infoBtnRight.addEventListener('click', () => toggleInfoPanel());
@@ -767,6 +770,19 @@ if (speedRangeLeft) {
 // Auto-rotate controls for right panel
 const autoRotateCheckRight = document.getElementById('autoRotateCheckRight');
 const speedRangeRight = document.getElementById('speedRangeRight');
+const sharedRecursiveModeCheckbox = document.getElementById('sharedRecursiveModeCheck');
+let sharedRecursiveModeCheck = true
+sharedRecursiveModeCheckbox.checked = false
+
+// if (sharedRecursiveModeCheckbox) {
+//   speedRangeRight.addEventListener('change', (e) => {
+//     sharedRecursiveModeCheck = e.target.checked;
+//     console.log("sharedRecursiveModeCheck is " + sharedRecursiveModeCheck)
+//     window.location.href(window.location.href+"?isRecursiveDirectoryMode=true");
+
+//   });
+// }
+
 
 if (autoRotateCheckRight) {
   autoRotateCheckRight.addEventListener('change', (e) => {
@@ -886,8 +902,20 @@ async function moveToRightBasket() {
 
 // Info Panel Functions
 function toggleInfoPanel() {
+  console.log("ASDADS");
+  
   if (infoPanel) {
     infoPanel.classList.toggle('hidden');
+  }
+}
+
+
+// Info Panel Functions
+function toggleInfoModal() {
+  console.log(infoBtnLeft);
+  
+  if (infoModal) {
+    infoModal.classList.toggle('hidden');
   }
 }
 
