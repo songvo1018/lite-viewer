@@ -45,6 +45,12 @@ let rightAutoRotateInterval = null;
 let leftAutoRotateSpeed = 2; // Default 2 seconds
 let rightAutoRotateSpeed = 2; // Default 2 seconds
 
+// Track current video elements for auto-rotate
+let leftVideoElement = null;
+let rightVideoElement = null;
+let leftWaitingForVideo = false;
+let rightWaitingForVideo = false;
+
 // Update timer display
 function updateTimerDisplay() {
   const speedValueLeft = document.getElementById('speedValueLeft');
@@ -63,8 +69,13 @@ function startLeftAutoRotate() {
   if (leftAutoRotateInterval) {
     clearInterval(leftAutoRotateInterval);
   }
-  
+
   if (leftAutoRotateEnabled && leftImageList.length > 0) {
+    // If waiting for video to end, don't start interval yet
+    if (leftWaitingForVideo && leftVideoElement) {
+      return;
+    }
+    
     leftAutoRotateInterval = setInterval(() => {
       showImageLeft(leftCurrentIndex + 1, true);
     }, leftAutoRotateSpeed * 1000);
@@ -76,8 +87,13 @@ function startRightAutoRotate() {
   if (rightAutoRotateInterval) {
     clearInterval(rightAutoRotateInterval);
   }
-  
+
   if (rightAutoRotateEnabled && rightImageList.length > 0) {
+    // If waiting for video to end, don't start interval yet
+    if (rightWaitingForVideo && rightVideoElement) {
+      return;
+    }
+    
     rightAutoRotateInterval = setInterval(() => {
       showImageRight(rightCurrentIndex + 1, true);
     }, rightAutoRotateSpeed * 1000);
@@ -94,6 +110,11 @@ function stopAutoRotate() {
     clearInterval(rightAutoRotateInterval);
     rightAutoRotateInterval = null;
   }
+  // Reset video tracking
+  leftVideoElement = null;
+  rightVideoElement = null;
+  leftWaitingForVideo = false;
+  rightWaitingForVideo = false;
 }
 
 // Auto-rotate images for both panels
@@ -427,7 +448,30 @@ function showImageLeft(index, isAutoRotate = false) {
 
   if (isVideo) {
     // Display as video element
-    mediaWrapperLeft.innerHTML = `<video src="${filePath}?t=${Date.now()}" controls style="max-width: 100%; max-height: 100%;"></video>`;
+    mediaWrapperLeft.innerHTML = `<video autoplay src="${filePath}?t=${Date.now()}" controls style="max-width: 100%; max-height: 100%;"></video>`;
+    
+    // Track video element
+    leftVideoElement = mediaWrapperLeft.querySelector('video');
+    
+    // If auto-rotate is enabled and we're not waiting for another video, 
+    // we need to wait for this video to end
+    if (leftAutoRotateEnabled && !leftWaitingForVideo) {
+      leftWaitingForVideo = true;
+      
+      // When video ends, automatically show next item
+      leftVideoElement.addEventListener('ended', () => {
+        console.log('Left video ended, showing next image');
+        leftWaitingForVideo = false;
+        leftVideoElement = null;
+        showImageLeft(leftCurrentIndex + 1, true);
+      });
+      
+      // Also remove the interval if it was set
+      if (leftAutoRotateInterval) {
+        clearInterval(leftAutoRotateInterval);
+        leftAutoRotateInterval = null;
+      }
+    }
   } else {
     // Display as image
     const img = document.createElement('img');
@@ -436,6 +480,15 @@ function showImageLeft(index, isAutoRotate = false) {
     img.style.maxHeight = '100%';
     img.style.objectFit = 'contain';
     mediaWrapperLeft.appendChild(img);
+    
+    // Reset video tracking for non-video items
+    leftVideoElement = null;
+    leftWaitingForVideo = false;
+    
+    // Restart auto-rotate interval for images
+    if (leftAutoRotateEnabled && !leftAutoRotateInterval) {
+      startLeftAutoRotate();
+    }
   }
 
   // Update info
@@ -474,6 +527,29 @@ function showImageRight(index, isAutoRotate = false) {
   if (isVideo) {
     // Display as video element
     mediaWrapperRight.innerHTML = `<video src="${filePath}?t=${Date.now()}" controls style="max-width: 100%; max-height: 100%;"></video>`;
+    
+    // Track video element
+    rightVideoElement = mediaWrapperRight.querySelector('video');
+    
+    // If auto-rotate is enabled and we're not waiting for another video, 
+    // we need to wait for this video to end
+    if (rightAutoRotateEnabled && !rightWaitingForVideo) {
+      rightWaitingForVideo = true;
+      
+      // When video ends, automatically show next item
+      rightVideoElement.addEventListener('ended', () => {
+        console.log('Right video ended, showing next image');
+        rightWaitingForVideo = false;
+        rightVideoElement = null;
+        showImageRight(rightCurrentIndex + 1, true);
+      });
+      
+      // Also remove the interval if it was set
+      if (rightAutoRotateInterval) {
+        clearInterval(rightAutoRotateInterval);
+        rightAutoRotateInterval = null;
+      }
+    }
   } else {
     // Display as image
     const img = document.createElement('img');
@@ -482,6 +558,15 @@ function showImageRight(index, isAutoRotate = false) {
     img.style.maxHeight = '100%';
     img.style.objectFit = 'contain';
     mediaWrapperRight.appendChild(img);
+    
+    // Reset video tracking for non-video items
+    rightVideoElement = null;
+    rightWaitingForVideo = false;
+    
+    // Restart auto-rotate interval for images
+    if (rightAutoRotateEnabled && !rightAutoRotateInterval) {
+      startRightAutoRotate();
+    }
   }
 
   // Update info
