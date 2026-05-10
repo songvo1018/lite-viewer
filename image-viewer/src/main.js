@@ -177,7 +177,6 @@ const infoModal = document.getElementById('infoModal');
 const closeBtn = document.querySelector('.close');
 if (closeBtn) {
   closeBtn.addEventListener('click', () => {
-    infoModal = document.getElementById('infoModal');
     const renameModal = document.getElementById('renameModal');
     infoModal.classList.toggle("hidden");
     renameModal.style.display = 'none';
