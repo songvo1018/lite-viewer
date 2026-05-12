@@ -232,6 +232,67 @@ function createApiServer() {
           }
         });
         return;
+      } else if (req.url.startsWith('/api/add-to-favorites') && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', () => {
+          try {
+            const { filePath } = JSON.parse(body);
+
+            // Normalize path - convert backslashes to forward slashes and remove leading/trailing slashes
+            const normalizedPath = filePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+
+            // Build path
+            const sourceFullPath = path.join(PUBLIC_DIR, normalizedPath);
+
+            logMessage(`Add to favorites request: ${normalizedPath}`, 'info');
+            logMessage(`Source path: ${sourceFullPath}`, 'info');
+            logMessage(`Source path exists: ${fs.existsSync(sourceFullPath)}`, 'info');
+
+            if (!fs.existsSync(sourceFullPath)) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'File not found' }));
+              return;
+            }
+
+            // Create favorites directory if it doesn't exist
+            const favoritesDir = path.join(PUBLIC_DIR, 'favorites');
+            if (!fs.existsSync(favoritesDir)) {
+              fs.mkdirSync(favoritesDir, { recursive: true });
+              logMessage(`Created favorites directory: ${favoritesDir}`, 'info');
+            }
+
+            const fileName = path.basename(normalizedPath);
+            const destFullPath = path.join(favoritesDir, fileName);
+
+            // Check if file already exists in favorites
+            let destPath = destFullPath;
+            let counter = 1;
+            while (fs.existsSync(destPath)) {
+              const nameWithoutExt = path.basename(normalizedPath, path.extname(normalizedPath));
+              const ext = path.extname(normalizedPath);
+              destPath = path.join(favoritesDir, `${nameWithoutExt}_${counter}${ext}`);
+              counter++;
+            }
+
+            // Copy the file (not move - favorites should keep original)
+            fs.copyFileSync(sourceFullPath, destPath);
+
+            logMessage(`Added to favorites: ${normalizedPath} -> ${path.relative(PUBLIC_DIR, destPath)}`, 'success');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              newPath: path.relative(PUBLIC_DIR, destPath)
+            }));
+          } catch (error) {
+            logMessage(`Failed to add to favorites: ${error.message}`, 'error');
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+          }
+        });
+        return;
       } else if (req.url.startsWith('/api/ips')) {
         try {
           const ips = getLocalIPs();

@@ -1,5 +1,50 @@
-// File extensions to filter (images + videos)
-const fileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.mp4'];
+// Configuration loaded from app-config.json
+let appConfig = null;
+
+// Load configuration from app-config.json
+async function loadAppConfig() {
+  try {
+    const response = await fetch('/app-config.json');
+    if (response.ok) {
+      appConfig = await response.json();
+      console.log('App config loaded:', appConfig);
+      return appConfig;
+    }
+  } catch (error) {
+    console.warn('Could not load app-config.json, using defaults:', error);
+  }
+  // Return default config if loading fails
+  return {
+    keyboardShortcuts: {
+      previousLeft: { description: "Previous image (left panel)", keys: ["ArrowLeft", "a", "A", "ф", "Ф"] },
+      nextRight: { description: "Next image (right panel)", keys: ["ArrowRight", "d", "D", "ж", "В"] },
+      toggleAutoRotateLeft: { description: "Toggle auto-rotate (left panel)", keys: ["q", "Q", "й", "Й"] },
+      toggleAutoRotateRight: { description: "Toggle auto-rotate (right panel)", keys: ["e", "E", "ц", "Ц"] },
+      pauseResumeCurrent: { description: "Pause/Resume current panel's auto-rotate", keys: [" "] },
+      moveToLeftBasket: { description: "Move current image from left panel to basket", keys: ["z", "Z", "я", "Я"] },
+      moveToRightBasket: { description: "Move current image from right panel to basket", keys: ["c", "C", "с", "С"] },
+      hideViewer: { description: "Hide media viewer", keys: ["Escape"] }
+    },
+    autoRotate: { defaultSpeed: 2, minSpeed: 1, maxSpeed: 10, speedUnit: "seconds" },
+    basket: { directoryName: "basket" },
+    fileExtensions: {
+      images: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"],
+      videos: [".mp4"]
+    }
+  };
+}
+
+// Get config value with path (e.g., "keyboardShortcuts.previousLeft")
+function getConfig(path) {
+  if (!appConfig) return null;
+  const keys = path.split('.');
+  let value = appConfig;
+  for (const key of keys) {
+    value = value?.[key];
+    if (value === undefined) return null;
+  }
+  return value;
+}
 
 // Splitter state
 let isDragging = false;
@@ -57,10 +102,20 @@ function updateTimerDisplay() {
   if (speedValueLeft) {
     speedValueLeft.textContent = `${leftAutoRotateSpeed}s`;
   }
-  
+
   const speedValueRight = document.getElementById('speedValueRight');
   if (speedValueRight) {
     speedValueRight.textContent = `${rightAutoRotateSpeed}s`;
+  }
+}
+
+// Update speed from config after it loads
+function updateSpeedFromConfig() {
+  const autoRotateConfig = getConfig('autoRotate');
+  if (autoRotateConfig && autoRotateConfig.defaultSpeed) {
+    leftAutoRotateSpeed = autoRotateConfig.defaultSpeed;
+    rightAutoRotateSpeed = autoRotateConfig.defaultSpeed;
+    updateTimerDisplay();
   }
 }
 
@@ -150,7 +205,7 @@ async function loadIPs() {
 
 // Close modal when clicking outside
 window.addEventListener('click', (e) => {
-  const infoModal = document.getElementById('infoModal');
+  infoModal = document.getElementById('infoModal');
   const renameModal = document.getElementById('renameModal');
   
   if (e.target === infoModal) {
@@ -171,7 +226,7 @@ window.addEventListener('click', (e) => {
 //   infoBtnRight.addEventListener('click', () => toggleInfoPanel());
 // }
 
-const infoModal = document.getElementById('infoModal');
+let infoModal = document.getElementById('infoModal');
 
 // Close modal when clicking close button
 const closeBtn = document.querySelector('.close');
@@ -572,6 +627,13 @@ function showImageRight(index, isAutoRotate = false) {
   imageInfoRight.textContent = `Right: ${rightCurrentIndex + 1} / ${rightImageList.length} - ${fileName}`;
 }
 
+// Check if event key matches config keys
+function matchesKeyConfig(event, configPath) {
+  const keys = getConfig(configPath);
+  if (!keys || !keys.keys) return false;
+  return keys.keys.includes(event.key) || keys.keys.includes(event.code);
+}
+
 // Keyboard navigation
 function handleKeyDown(event) {
   // Suppress navigation if rename modal is open
@@ -581,7 +643,7 @@ function handleKeyDown(event) {
   }
 
   // Q/Й: Pause/Resume left panel auto-rotate
-  if (event.key === 'q' || event.key === 'Q' || event.key === 'й' || event.key === 'Й') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.toggleAutoRotateLeft')) {
     if (leftAutoRotateInterval) {
       clearInterval(leftAutoRotateInterval);
       leftAutoRotateInterval = null;
@@ -591,7 +653,7 @@ function handleKeyDown(event) {
   }
 
   // E/Ц: Pause/Resume right panel auto-rotate
-  if (event.key === 'e' || event.key === 'E' || event.key === 'ц' || event.key === 'Ц') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.toggleAutoRotateRight')) {
     if (rightAutoRotateInterval) {
       clearInterval(rightAutoRotateInterval);
       rightAutoRotateInterval = null;
@@ -601,9 +663,9 @@ function handleKeyDown(event) {
   }
 
   // Space: Pause/Resume current panel's auto-rotate (left panel has priority)
-  if (event.code === 'Space' && event.key === ' ') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.pauseResumeCurrent')) {
     event.preventDefault();
-    
+
     // Pause/Resume left panel
     if (leftAutoRotateInterval) {
       clearInterval(leftAutoRotateInterval);
@@ -611,7 +673,7 @@ function handleKeyDown(event) {
     } else if (leftAutoRotateEnabled) {
       startLeftAutoRotate();
     }
-    
+
     // If left panel is not enabled, try right panel
     else if (rightAutoRotateInterval) {
       clearInterval(rightAutoRotateInterval);
@@ -622,21 +684,21 @@ function handleKeyDown(event) {
   }
 
   // Left viewer navigation (A, Left Arrow, Ф)
-  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A' || event.key === 'ф' || event.key === 'Ф') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.previousLeft')) {
     if (leftImageList.length > 0) {
       showImageLeft(leftCurrentIndex - 1);
     }
   }
 
   // Right viewer navigation (D, Right Arrow, Ж, В)
-  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D' || event.key === 'ж' || event.key === 'В') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.nextRight')) {
     if (rightImageList.length > 0) {
       showImageRight(rightCurrentIndex + 1);
     }
   }
 
   // Escape to hide info panel or clear media viewer
-  if (event.key === 'Escape') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.hideViewer')) {
     if (infoPanel && !infoPanel.classList.contains('hidden')) {
       hideInfoPanel();
       return;
@@ -646,16 +708,30 @@ function handleKeyDown(event) {
   }
 
   // Z/Я: Move left panel image to basket
-  if (event.key === 'z' || event.key === 'Z' || event.key === 'я' || event.key === 'Я') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.moveToLeftBasket')) {
     event.preventDefault();
     moveToLeftBasket();
     return;
   }
 
   // C/С: Move right panel image to basket
-  if (event.key === 'c' || event.key === 'C' || event.key === 'с' || event.key === 'С') {
+  if (matchesKeyConfig(event, 'keyboardShortcuts.moveToRightBasket')) {
     event.preventDefault();
     moveToRightBasket();
+    return;
+  }
+
+  // 1: Add left panel image to favorites
+  if (matchesKeyConfig(event, 'keyboardShortcuts.addToFavoritesLeft')) {
+    event.preventDefault();
+    addToFavoritesLeft();
+    return;
+  }
+
+  // 3: Add right panel image to favorites
+  if (matchesKeyConfig(event, 'keyboardShortcuts.addToFavoritesRight')) {
+    event.preventDefault();
+    addToFavoritesRight();
     return;
   }
 }
@@ -729,7 +805,10 @@ dirSelectRight.addEventListener('change', (e) => {
 document.addEventListener('keydown', handleKeyDown);
 
 // Initialize
-loadDirectories();
+loadAppConfig().then(() => {
+  updateSpeedFromConfig();
+  loadDirectories();
+});
 
 // Handle URL changes (back/forward buttons)
 window.addEventListener('popstate', () => {
@@ -980,6 +1059,120 @@ async function moveToRightBasket() {
     }
   } catch (error) {
     console.error('Move to basket (right) error:', error);
+    alert('Error: ' + error.message);
+  }
+}
+
+// ============================================
+// ADD TO FAVORITES FUNCTIONALITY
+// ============================================
+
+// Show notification toast
+function showNotification(message) {
+  // Remove existing notification if any
+  const existing = document.getElementById('favoriteNotification');
+  if (existing) existing.remove();
+
+  const notification = document.createElement('div');
+  notification.id = 'favoriteNotification';
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: rgba(0, 128, 0, 0.9);
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    animation: fadeInOut 3s ease-in-out;
+  `;
+
+  // Add CSS for animation
+  if (!document.getElementById('favoriteNotificationStyle')) {
+    const style = document.createElement('style');
+    style.id = 'favoriteNotificationStyle';
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -20px); }
+        10% { opacity: 1; transform: translate(-50%, 0); }
+        90% { opacity: 1; transform: translate(-50%, 0); }
+        100% { opacity: 0; transform: translate(-50%, -20px); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(notification);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    if (document.getElementById('favoriteNotification')) {
+      notification.remove();
+    }
+  }, 3000);
+}
+
+// Add image to favorites for left panel
+async function addToFavoritesLeft() {
+  if (leftImageList.length === 0 || leftCurrentIndex < 0) return;
+
+  const currentFile = leftImageList[leftCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Add to favorites (left):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/add-to-favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      console.log('Added to favorites (left):', result.newPath);
+      showNotification('Added to favorites');
+    } else {
+      alert(`Error: ${result.error || 'Failed to add to favorites'}`);
+    }
+  } catch (error) {
+    console.error('Add to favorites (left) error:', error);
+    alert('Error: ' + error.message);
+  }
+}
+
+// Add image to favorites for right panel
+async function addToFavoritesRight() {
+  if (rightImageList.length === 0 || rightCurrentIndex < 0) return;
+
+  const currentFile = rightImageList[rightCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Add to favorites (right):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/add-to-favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      console.log('Added to favorites (right):', result.newPath);
+      showNotification('Added to favorites');
+    } else {
+      alert(`Error: ${result.error || 'Failed to add to favorites'}`);
+    }
+  } catch (error) {
+    console.error('Add to favorites (right) error:', error);
     alert('Error: ' + error.message);
   }
 }

@@ -1,0 +1,60 @@
+{
+  "keyboardShortcuts": {
+    "previousLeft": {
+      "description": "Previous image (left panel)",
+      "keys": ["ArrowLeft", "a", "A", "ф", "Ф"]
+    },
+    "nextRight": {
+      "description": "Next image (right panel)",
+      "keys": ["ArrowRight", "d", "D", "ж", "В"]
+    },
+    "toggleAutoRotateLeft": {
+      "description": "Toggle auto-rotate (left panel)",
+      "keys": ["q", "Q", "й", "Й"]
+    },
+    "toggleAutoRotateRight": {
+      "description": "Toggle auto-rotate (right panel)",
+      "keys": ["e", "E", "ц", "Ц"]
+    },
+    "pauseResumeCurrent": {
+      "description": "Pause/Resume current panel's auto-rotate (left has priority)",
+      "keys": [" "]
+    },
+    "moveToLeftBasket": {
+      "description": "Move current image from left panel to basket",
+      "keys": ["z", "Z", "я", "Я"]
+    },
+    "moveToRightBasket": {
+      "description": "Move current image from right panel to basket",
+      "keys": ["c", "C", "с", "С"]
+    },
+    "addToFavoritesLeft": {
+      "description": "Add current image from left panel to favorites",
+      "keys": ["1"]
+    },
+    "addToFavoritesRight": {
+      "description": "Add current image from right panel to favorites",
+      "keys": ["3"]
+    },
+    "hideViewer": {
+      "description": "Hide media viewer (shows only navigation buttons)",
+      "keys": ["Escape"]
+    }
+  },
+  "autoRotate": {
+    "defaultSpeed": 2,
+    "minSpeed": 1,
+    "maxSpeed": 10,
+    "speedUnit": "seconds"
+  },
+  "basket": {
+    "directoryName": "basket"
+  },
+  "favorites": {
+    "directoryName": "favorites"
+  },
+  "fileExtensions": {
+    "images": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"],
+    "videos": [".mp4"]
+  }
+}

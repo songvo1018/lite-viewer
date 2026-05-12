@@ -302,6 +302,54 @@ Each panel has a **trash button** to move images to a `basket/` directory:
 }
 ```
 
+### Add to Favorites
+Each panel has a **star button** to copy images to a `favorites/` directory:
+
+- **Star button** - Green star icon button (5th button in panel controls)
+- **Keyboard shortcuts**:
+  - `1`: Add current image from left panel to favorites
+  - `3`: Add current image from right panel to favorites
+
+**How it works:**
+1. Click star button or press 1/3 key
+2. Image is copied to `public/favorites/` directory (original is kept)
+3. File name is preserved (with counter suffix if duplicate exists)
+4. A notification "Added to favorites" appears for 3 seconds
+5. The favorites directory is created automatically if it doesn't exist
+
+**API endpoint:** `POST /api/add-to-favorites`
+```json
+{
+  "filePath": "/nature/image.jpg"
+}
+```
+
+### Configuration File
+The application uses `app-config.json` to configure keyboard shortcuts, file extensions, auto-rotate settings, and other behaviors:
+
+**Location:** `image-viewer/app-config.json`
+
+**Features configurable:**
+- Keyboard shortcuts (keys, combinations, descriptions)
+- Auto-rotate default speed and range
+- Basket directory name
+- Favorites directory name
+- Supported file extensions
+
+**Example - Customizing shortcuts:**
+```json
+{
+  "keyboardShortcuts": {
+    "previousLeft": {
+      "description": "Previous image (left panel)",
+      "keys": ["ArrowLeft", "h", "H", "б", "Б"]
+    }
+  }
+}
+```
+
+See [README.md](./README.md#configuration) for complete configuration documentation.
+
 ### URL Parameters
 Use URL parameters to open specific directories on startup:
 

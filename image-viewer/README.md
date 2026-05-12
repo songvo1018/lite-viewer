@@ -171,7 +171,11 @@ http://192.168.0.139:5173/?dir=nature
 | `Space` | Pause/Resume current panel's auto-rotate |
 | `Z` | Move to basket (left panel) |
 | `C` | Move to basket (right panel) |
+| `1` | Add to favorites (left panel) |
+| `3` | Add to favorites (right panel) |
 | `Esc` | Hide the media viewer (shows only navigation buttons) |
+
+**Note:** Keyboard shortcuts are configurable via `app-config.json`. See [Configuration](#configuration) for details.
 
 ### Features Overview
 
@@ -212,6 +216,22 @@ Each panel has a **trash button** to move images to a `basket/` directory:
 3. File name is preserved (with counter suffix if duplicate exists)
 4. After successful move, the next image is automatically displayed
 5. If no images remain, directories are reloaded
+
+#### Add to Favorites
+Each panel has a button to copy images to a `favorites/` directory:
+
+- **Button** - Green star icon button (5th button in panel controls)
+- **Keyboard shortcuts**:
+  - `1`: Add current image from left panel to favorites
+  - `3`: Add current image from right panel to favorites
+
+**How it works:**
+1. Click star button or press 1/3 key
+2. Image is copied to `public/favorites/` directory (original is kept)
+3. File name is preserved (with counter suffix if duplicate exists)
+4. A notification "Added to favorites" appears for 3 seconds
+
+**Note:** The `favorites/` directory is created automatically if it doesn't exist.
 
 #### Touch (Mobile)
 
@@ -340,6 +360,125 @@ Edit `src/style.css` to change colors, sizes, and layout. Key selectors:
 - `#imageInfo` - Filename display
 - `.nav-btn` - Navigation buttons
 
+## Configuration
+
+### App Configuration (app-config.json)
+
+The application uses a separate `app-config.json` file to configure keyboard shortcuts, file extensions, auto-rotate settings, and other application behavior. This file is located in the project root (`image-viewer/app-config.json`).
+
+**Structure:**
+
+```json
+{
+  "keyboardShortcuts": {
+    "previousLeft": { "description": "...", "keys": [...] },
+    "nextRight": { "description": "...", "keys": [...] },
+    ...
+  },
+  "autoRotate": {
+    "defaultSpeed": 2,
+    "minSpeed": 1,
+    "maxSpeed": 10,
+    "speedUnit": "seconds"
+  },
+  "basket": {
+    "directoryName": "basket"
+  },
+  "fileExtensions": {
+    "images": [".jpg", ".jpeg", ...],
+    "videos": [".mp4"]
+  }
+}
+```
+
+### Keyboard Shortcuts
+
+You can customize keyboard shortcuts by editing the `app-config.json` file:
+
+| Setting | Default Keys | Description |
+|---------|--------------|-------------|
+| `keyboardShortcuts.previousLeft` | `ArrowLeft`, `A`, `Ф` | Previous image (left panel) |
+| `keyboardShortcuts.nextRight` | `ArrowRight`, `D`, `Ж` | Next image (right panel) |
+| `keyboardShortcuts.toggleAutoRotateLeft` | `Q`, `Й` | Toggle auto-rotate (left panel) |
+| `keyboardShortcuts.toggleAutoRotateRight` | `E`, `Ц` | Toggle auto-rotate (right panel) |
+| `keyboardShortcuts.pauseResumeCurrent` | `Space` | Pause/Resume current panel's auto-rotate |
+| `keyboardShortcuts.moveToFirstBasket` | `Z`, `Я` | Move left panel image to basket |
+| `keyboardShortcuts.moveToRightBasket` | `C`, `С` | Move right panel image to basket |
+| `keyboardShortcuts.hideViewer` | `Escape` | Hide media viewer |
+
+**Supported key formats:**
+- Single character: `"a"`, `"Q"`, `" "`
+- Arrow keys: `"ArrowLeft"`, `"ArrowRight"`
+- Cyrillic: `"й"`, `"ц"`, `"ф"`, etc.
+- Special keys: `"Escape"`
+
+**Example - Customizing shortcuts for left panel navigation:**
+
+```json
+{
+  "keyboardShortcuts": {
+    "previousLeft": {
+      "description": "Previous image (left panel)",
+      "keys": ["ArrowLeft", "h", "H", "б", "Б"]
+    }
+  }
+}
+```
+
+### Auto-Rotate Settings
+
+Configure the default speed and range for auto-rotate:
+
+```json
+{
+  "autoRotate": {
+    "defaultSpeed": 3,
+    "minSpeed": 1,
+    "maxSpeed": 15,
+    "speedUnit": "seconds"
+  }
+}
+```
+
+### File Extensions
+
+Customize supported file types:
+
+```json
+{
+  "fileExtensions": {
+    "images": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"],
+    "videos": [".mp4", ".mov"]
+  }
+}
+```
+
+### Basket Directory
+
+Change the name of the basket directory (where moved images go):
+
+```json
+{
+  "basket": {
+    "directoryName": "trash"
+  }
+}
+```
+
+### Favorites Directory
+
+Change the name of the favorites directory (where copied images go):
+
+```json
+{
+  "favorites": {
+    "directoryName": "my-favorites"
+  }
+}
+```
+
+**Note:** The favorites directory is created automatically when the first image is added. Files are **copied** (not moved), so the original remains in its location.
+
 ## API Endpoints
 
 ### GET `/api/images?dir=directory_name`
@@ -402,6 +541,30 @@ Renames a directory. Requires JSON body with `oldPath` and `newPath`.
 **Error responses:**
 - `404` - Directory not found
 - `409` - Directory with new name already exists
+
+### POST `/api/add-to-favorites`
+
+Copies an image to the `favorites/` directory. Requires JSON body with `filePath`.
+
+**Request body:**
+```json
+{
+  "filePath": "/nature/image.jpg"
+}
+```
+
+**Success response:**
+```json
+{
+  "success": true,
+  "newPath": "favorites/image.jpg"
+}
+```
+
+**Error responses:**
+- `404` - File not found
+
+The favorites directory is created automatically if it doesn't exist. If a file with the same name already exists, a counter suffix is added (e.g., `image_1.jpg`).
 
 ## Troubleshooting
 
