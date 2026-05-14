@@ -1,20 +1,3 @@
-import { PANEL, UI_IDS, KEYBOARD_SHORTCUTS, FILE_EXTENSIONS, DIRECTORIES } from './consts.js';
-import {
-  getEl,
-  getPanelEl,
-  normalizePath,
-  getFileName,
-  wrapIndex,
-  isVideoFile,
-  clearMediaWrapper,
-  updateImageInfo,
-  updateSpeedDisplay,
-  showNotification,
-  handleMoveToBasket,
-  handleAddToFavorites,
-} from './utils.js';
-import { showImageForPanel, startAutoRotateForPanel, stopAutoRotateForPanel, stopAutoRotateForAll } from './panelLogic.js';
-
 // Configuration loaded from app-config.json
 let appConfig = null;
 
@@ -68,45 +51,28 @@ let isDragging = false;
 let startX = 0;
 let startWidthLeft = 50;
 
-// DOM elements for left viewer (using getEl for caching)
-const mediaWrapperLeft = getEl(UI_IDS.MEDIA_WRAPPER_LEFT);
-const imageInfoLeft = getEl(UI_IDS.IMAGE_INFO_LEFT);
-const prevBtnLeft = getEl(UI_IDS.PREV_BTN_LEFT);
-const nextBtnLeft = getEl(UI_IDS.NEXT_BTN_LEFT);
-const dirSelectLeft = getEl(UI_IDS.DIR_SELECT_LEFT);
-const trashBtnLeft = getEl(UI_IDS.TRASH_BTN_LEFT);
-const renameBtnLeft = getEl(UI_IDS.RENAME_BTN_LEFT);
-const autoRotateCheckLeft = getEl(UI_IDS.AUTO_ROTATE_CHECK_LEFT);
-const speedRangeLeft = getEl(UI_IDS.SPEED_RANGE_LEFT);
-const speedValueLeft = getEl(UI_IDS.SPEED_VALUE_LEFT);
+// DOM elements for left viewer
+const mediaWrapperLeft = document.getElementById('mediaWrapperLeft');
+const imageInfoLeft = document.getElementById('imageInfoLeft');
+const prevBtnLeft = document.getElementById('prevBtnLeft');
+const nextBtnLeft = document.getElementById('nextBtnLeft');
+const dirSelectLeft = document.getElementById('dirSelectLeft');
 
-// DOM elements for right viewer (using getEl for caching)
-const mediaWrapperRight = getEl(UI_IDS.MEDIA_WRAPPER_RIGHT);
-const imageInfoRight = getEl(UI_IDS.IMAGE_INFO_RIGHT);
-const prevBtnRight = getEl(UI_IDS.PREV_BTN_RIGHT);
-const nextBtnRight = getEl(UI_IDS.NEXT_BTN_RIGHT);
-const dirSelectRight = getEl(UI_IDS.DIR_SELECT_RIGHT);
-const trashBtnRight = getEl(UI_IDS.TRASH_BTN_RIGHT);
-const renameBtnRight = getEl(UI_IDS.RENAME_BTN_RIGHT);
-const autoRotateCheckRight = getEl(UI_IDS.AUTO_ROTATE_CHECK_RIGHT);
-const speedRangeRight = getEl(UI_IDS.SPEED_RANGE_RIGHT);
-const speedValueRight = getEl(UI_IDS.SPEED_VALUE_RIGHT);
+// DOM elements for right viewer
+const mediaWrapperRight = document.getElementById('mediaWrapperRight');
+const imageInfoRight = document.getElementById('imageInfoRight');
+const prevBtnRight = document.getElementById('prevBtnRight');
+const nextBtnRight = document.getElementById('nextBtnRight');
+const dirSelectRight = document.getElementById('dirSelectRight');
 
 // Splitter element
-const splitter = getEl(UI_IDS.SPLITTER);
+const splitter = document.getElementById('splitter');
 
 // Info panel elements
-const infoPanel = getEl(UI_IDS.INFO_PANEL);
-const infoBtnLeft = getEl(UI_IDS.INFO_BTN_LEFT);
-const infoBtnRight = getEl(UI_IDS.INFO_BTN_RIGHT);
-const closeInfoPanelBtn = getEl(UI_IDS.CLOSE_INFO_PANEL);
-const infoModal = getEl(UI_IDS.INFO_MODAL);
-const renameModal = getEl(UI_IDS.RENAME_MODAL);
-const currentDirNameEl = getEl(UI_IDS.CURRENT_DIR_NAME);
-const newDirNameInput = getEl(UI_IDS.NEW_DIR_NAME);
-const confirmRenameBtn = getEl(UI_IDS.CONFIRM_RENAME);
-const cancelRenameBtn = getEl(UI_IDS.CANCEL_RENAME);
-const sharedRecursiveModeCheckbox = getEl(UI_IDS.SHARED_RECURSIVE_MODE_CHECK);
+const infoPanel = document.getElementById('infoPanel');
+const infoBtnLeft = document.getElementById('infoBtnLeft');
+const infoBtnRight = document.getElementById('infoBtnRight');
+const closeInfoPanelBtn = document.getElementById('closeInfoPanel');
 
 // Current state for both viewers
 let leftImageList = [];
@@ -239,6 +205,9 @@ async function loadIPs() {
 
 // Close modal when clicking outside
 window.addEventListener('click', (e) => {
+  infoModal = document.getElementById('infoModal');
+  const renameModal = document.getElementById('renameModal');
+  
   if (e.target === infoModal) {
     infoModal.classList.toggle("hidden");
   }
@@ -257,14 +226,25 @@ window.addEventListener('click', (e) => {
 //   infoBtnRight.addEventListener('click', () => toggleInfoPanel());
 // }
 
+let infoModal = document.getElementById('infoModal');
+
 // Close modal when clicking close button
 const closeBtn = document.querySelector('.close');
 if (closeBtn) {
   closeBtn.addEventListener('click', () => {
+    const renameModal = document.getElementById('renameModal');
     infoModal.classList.toggle("hidden");
     renameModal.style.display = 'none';
   });
 }
+
+// Rename functionality for left panel
+const renameBtnLeft = document.getElementById('renameBtnLeft');
+const renameModal = document.getElementById('renameModal');
+const currentDirNameEl = document.getElementById('currentDirName');
+const newDirNameInput = document.getElementById('newDirName');
+const confirmRenameBtn = document.getElementById('confirmRename');
+const cancelRenameBtn = document.getElementById('cancelRename');
 
 // Rename button for left panel
 if (renameBtnLeft) {
@@ -282,6 +262,7 @@ if (renameBtnLeft) {
 }
 
 // Rename button for right panel
+const renameBtnRight = document.getElementById('renameBtnRight');
 if (renameBtnRight) {
   renameBtnRight.addEventListener('click', () => {
     console.log('Rename button clicked (right), currentDirectoryPath:', rightDirectoryPath);
@@ -510,9 +491,6 @@ function showImageLeft(index, isAutoRotate = false) {
   // Clear previous content
   mediaWrapperLeft.innerHTML = '';
 
-  // Track if auto-rotate was enabled before manual navigation
-  const wasAutoRotateEnabled = leftAutoRotateEnabled && leftAutoRotateInterval !== null;
-
   // Stop auto-rotate only if manually navigating (not from auto-rotate interval)
   if (!isAutoRotate && leftAutoRotateInterval) {
     clearInterval(leftAutoRotateInterval);
@@ -560,9 +538,9 @@ function showImageLeft(index, isAutoRotate = false) {
     // Reset video tracking for non-video items
     leftVideoElement = null;
     leftWaitingForVideo = false;
-
-    // Restart auto-rotate interval for images if it was enabled before manual navigation
-    if (leftAutoRotateEnabled && !leftAutoRotateInterval && wasAutoRotateEnabled) {
+    
+    // Restart auto-rotate interval for images
+    if (leftAutoRotateEnabled && !leftAutoRotateInterval) {
       startLeftAutoRotate();
     }
   }
@@ -590,9 +568,6 @@ function showImageRight(index, isAutoRotate = false) {
 
   // Clear previous content
   mediaWrapperRight.innerHTML = '';
-
-  // Track if auto-rotate was enabled before manual navigation
-  const wasAutoRotateEnabled = rightAutoRotateEnabled && rightAutoRotateInterval !== null;
 
   // Stop auto-rotate only if manually navigating (not from auto-rotate interval)
   if (!isAutoRotate && rightAutoRotateInterval) {
@@ -641,9 +616,9 @@ function showImageRight(index, isAutoRotate = false) {
     // Reset video tracking for non-video items
     rightVideoElement = null;
     rightWaitingForVideo = false;
-
-    // Restart auto-rotate interval for images if it was enabled before manual navigation
-    if (rightAutoRotateEnabled && !rightAutoRotateInterval && wasAutoRotateEnabled) {
+    
+    // Restart auto-rotate interval for images
+    if (rightAutoRotateEnabled && !rightAutoRotateInterval) {
       startRightAutoRotate();
     }
   }
@@ -662,6 +637,7 @@ function matchesKeyConfig(event, configPath) {
 // Keyboard navigation
 function handleKeyDown(event) {
   // Suppress navigation if rename modal is open
+  const renameModal = document.getElementById('renameModal');
   if (renameModal && renameModal.style.display === 'block') {
     return;
   }
@@ -926,7 +902,9 @@ if (speedRange) {
     }
   });
 }
-// Auto-rotate controls for left panel (using cached elements)
+// Auto-rotate controls for left panel
+const autoRotateCheckLeft = document.getElementById('autoRotateCheckLeft');
+const speedRangeLeft = document.getElementById('speedRangeLeft');
 
 if (autoRotateCheckLeft) {
   autoRotateCheckLeft.addEventListener('change', (e) => {
@@ -952,7 +930,10 @@ if (speedRangeLeft) {
   });
 }
 
-// Auto-rotate controls for right panel (using cached elements)
+// Auto-rotate controls for right panel
+const autoRotateCheckRight = document.getElementById('autoRotateCheckRight');
+const speedRangeRight = document.getElementById('speedRangeRight');
+const sharedRecursiveModeCheckbox = document.getElementById('sharedRecursiveModeCheck');
 let sharedRecursiveModeCheck = true
 sharedRecursiveModeCheckbox.checked = false
 
@@ -996,47 +977,204 @@ if (speedRangeRight) {
 
 // Move image to basket for left panel
 async function moveToLeftBasket() {
-  const result = await handleMoveToBasket(PANEL.LEFT, leftImageList, leftCurrentIndex, leftImageList[leftCurrentIndex]);
-  
-  if (result.success) {
-    if (result.empty) {
-      loadDirectories();
+  if (leftImageList.length === 0 || leftCurrentIndex < 0) return;
+
+  const currentFile = leftImageList[leftCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Move to basket (left):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/move-to-basket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+    
+    console.log('Response status:', response.status);
+
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log('Moved to basket (left):', result.newPath);
+      
+      // Remove from current list
+      leftImageList.splice(leftCurrentIndex, 1);
+      
+      // If list is empty, reload directories
+      if (leftImageList.length === 0) {
+        loadDirectories();
+      } else {
+        // Show next image (wrap around if needed)
+        if (leftCurrentIndex >= leftImageList.length) {
+          leftCurrentIndex = 0;
+        }
+        showImageLeft(leftCurrentIndex);
+      }
     } else {
-      leftCurrentIndex = result.newIndex;
-      showImageLeft(leftCurrentIndex);
+      alert(`Error: ${result.error || 'Failed to move to basket'}`);
     }
-  } else {
-    alert(`Error: ${result.error || 'Failed to move to basket'}`);
+  } catch (error) {
+    console.error('Move to basket (left) error:', error);
+    alert('Error: ' + error.message);
   }
 }
 
 // Move image to basket for right panel
 async function moveToRightBasket() {
-  const result = await handleMoveToBasket(PANEL.RIGHT, rightImageList, rightCurrentIndex, rightImageList[rightCurrentIndex]);
-  
-  if (result.success) {
-    if (result.empty) {
-      loadDirectories();
+  if (rightImageList.length === 0 || rightCurrentIndex < 0) return;
+
+  const currentFile = rightImageList[rightCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Move to basket (right):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/move-to-basket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
+      console.log('Moved to basket (right):', result.newPath);
+      
+      // Remove from current list
+      rightImageList.splice(rightCurrentIndex, 1);
+      
+      // If list is empty, reload directories
+      if (rightImageList.length === 0) {
+        loadDirectories();
+      } else {
+        // Show next image (wrap around if needed)
+        if (rightCurrentIndex >= rightImageList.length) {
+          rightCurrentIndex = 0;
+        }
+        showImageRight(rightCurrentIndex);
+      }
     } else {
-      rightCurrentIndex = result.newIndex;
-      showImageRight(rightCurrentIndex);
+      alert(`Error: ${result.error || 'Failed to move to basket'}`);
     }
-  } else {
-    alert(`Error: ${result.error || 'Failed to move to basket'}`);
+  } catch (error) {
+    console.error('Move to basket (right) error:', error);
+    alert('Error: ' + error.message);
   }
 }
 
 // ============================================
 // ADD TO FAVORITES FUNCTIONALITY
 // ============================================
+
+// Show notification toast
+function showNotification(message) {
+  // Remove existing notification if any
+  const existing = document.getElementById('favoriteNotification');
+  if (existing) existing.remove();
+
+  const notification = document.createElement('div');
+  notification.id = 'favoriteNotification';
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: rgba(0, 128, 0, 0.9);
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    animation: fadeInOut 3s ease-in-out;
+  `;
+
+  // Add CSS for animation
+  if (!document.getElementById('favoriteNotificationStyle')) {
+    const style = document.createElement('style');
+    style.id = 'favoriteNotificationStyle';
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -20px); }
+        10% { opacity: 1; transform: translate(-50%, 0); }
+        90% { opacity: 1; transform: translate(-50%, 0); }
+        100% { opacity: 0; transform: translate(-50%, -20px); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(notification);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    if (document.getElementById('favoriteNotification')) {
+      notification.remove();
+    }
+  }, 3000);
+}
+
 // Add image to favorites for left panel
 async function addToFavoritesLeft() {
-  await handleAddToFavorites(PANEL.LEFT, leftImageList[leftCurrentIndex]);
+  if (leftImageList.length === 0 || leftCurrentIndex < 0) return;
+
+  const currentFile = leftImageList[leftCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Add to favorites (left):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/add-to-favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      console.log('Added to favorites (left):', result.newPath);
+      showNotification('Added to favorites');
+    } else {
+      alert(`Error: ${result.error || 'Failed to add to favorites'}`);
+    }
+  } catch (error) {
+    console.error('Add to favorites (left) error:', error);
+    alert('Error: ' + error.message);
+  }
 }
 
 // Add image to favorites for right panel
 async function addToFavoritesRight() {
-  await handleAddToFavorites(PANEL.RIGHT, rightImageList[rightCurrentIndex]);
+  if (rightImageList.length === 0 || rightCurrentIndex < 0) return;
+
+  const currentFile = rightImageList[rightCurrentIndex];
+  // Normalize path - replace backslashes with forward slashes
+  const normalizedFile = currentFile.replace(/\\/g, '/');
+  console.log('Add to favorites (right):', currentFile, '->', normalizedFile);
+
+  try {
+    const response = await fetch('/api/add-to-favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: normalizedFile })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      console.log('Added to favorites (right):', result.newPath);
+      showNotification('Added to favorites');
+    } else {
+      alert(`Error: ${result.error || 'Failed to add to favorites'}`);
+    }
+  } catch (error) {
+    console.error('Add to favorites (right) error:', error);
+    alert('Error: ' + error.message);
+  }
 }
 
 // Info Panel Functions
