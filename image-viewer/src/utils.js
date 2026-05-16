@@ -1,4 +1,4 @@
-import { PANEL, UI_IDS, DIRECTORIES } from './consts.js';
+import { PANEL, UI_IDS, DIRECTORIES, API_ENDPOINTS } from './consts.js';
 
 // Кэш DOM элементов
 let elementCache = {};
@@ -215,7 +215,7 @@ export async function moveToBasket(panel, filePath) {
   console.log(`Move to basket (${panel}):`, filePath, '->', normalizedPath);
 
   try {
-    const response = await fetch(UI_IDS.MOVE_TO_BASKET, {
+    const response = await fetch(API_ENDPOINTS.MOVE_TO_BASKET, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filePath: normalizedPath })

@@ -6,7 +6,7 @@
     },
     "nextRight": {
       "description": "Next image (right panel)",
-      "keys": ["ArrowRight", "d", "D", "ж", "В"]
+      "keys": ["ArrowRight", "d", "D", "в", "В"]
     },
     "toggleAutoRotateLeft": {
       "description": "Toggle auto-rotate (left panel)",
@@ -14,7 +14,7 @@
     },
     "toggleAutoRotateRight": {
       "description": "Toggle auto-rotate (right panel)",
-      "keys": ["e", "E", "ц", "Ц"]
+      "keys": ["e", "E", "у", "У"]
     },
     "pauseResumeCurrent": {
       "description": "Pause/Resume current panel's auto-rotate (left has priority)",
@@ -56,5 +56,8 @@
   "fileExtensions": {
     "images": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"],
     "videos": [".mp4"]
+  },
+  "shuffleOrder": {
+    "enabled": false
   }
 }

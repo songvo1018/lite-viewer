@@ -47,7 +47,8 @@ async function loadAppConfig() {
     fileExtensions: {
       images: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"],
       videos: [".mp4"]
-    }
+    },
+    shuffleOrder: { enabled: false }
   };
 }
 
@@ -107,6 +108,7 @@ const newDirNameInput = getEl(UI_IDS.NEW_DIR_NAME);
 const confirmRenameBtn = getEl(UI_IDS.CONFIRM_RENAME);
 const cancelRenameBtn = getEl(UI_IDS.CANCEL_RENAME);
 const sharedRecursiveModeCheckbox = getEl(UI_IDS.SHARED_RECURSIVE_MODE_CHECK);
+const shuffleCheckbox = getEl(UI_IDS.SHUFFLE_CHECK);
 
 // Current state for both viewers
 let leftImageList = [];
@@ -123,6 +125,9 @@ let leftAutoRotateInterval = null;
 let rightAutoRotateInterval = null;
 let leftAutoRotateSpeed = 2; // Default 2 seconds
 let rightAutoRotateSpeed = 2; // Default 2 seconds
+
+// Shuffle state
+let isShuffleEnabled = false;
 
 // Track current video elements for auto-rotate
 let leftVideoElement = null;
@@ -436,7 +441,7 @@ async function loadImagesLeft(directory) {
   console.log('loadImagesLeft called with directory:', directory, '->', normalizedDir);
 
   try {
-    let response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}`);
+    let response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}&shuffle=${isShuffleEnabled}`);
     const responseText = await response.clone().text();
     console.log('Images API response (left):', response.status, responseText.substring(0, 200));
 
@@ -466,8 +471,8 @@ async function loadImagesRight(directory) {
   console.log('loadImagesRight called with directory:', directory, '->', normalizedDir);
 
   try {
-    console.log(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}`)
-    let response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}`);
+    console.log(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}&shuffle=${isShuffleEnabled}`)
+    let response = await fetch(`/api/images?dir=${encodeURIComponent(normalizedDir)}&isRecursiveDirectoryMode=${sharedRecursiveModeCheck}&shuffle=${isShuffleEnabled}`);
     const responseText = await response.clone().text();
     console.log('Images API response (right):', response.status, responseText.substring(0, 200));
 
@@ -831,6 +836,16 @@ document.addEventListener('keydown', handleKeyDown);
 // Initialize
 loadAppConfig().then(() => {
   updateSpeedFromConfig();
+  
+  // Initialize shuffle from config
+  const shuffleConfig = getConfig('shuffleOrder');
+  if (shuffleConfig && shuffleConfig.enabled !== undefined) {
+    isShuffleEnabled = shuffleConfig.enabled;
+    if (shuffleCheckbox) {
+      shuffleCheckbox.checked = isShuffleEnabled;
+    }
+  }
+  
   loadDirectories();
 });
 
@@ -965,6 +980,16 @@ sharedRecursiveModeCheckbox.checked = false
 //   });
 // }
 
+// Shuffle checkbox handler
+if (shuffleCheckbox) {
+  shuffleCheckbox.addEventListener('change', (e) => {
+    isShuffleEnabled = e.target.checked;
+    console.log("Shuffle enabled:", isShuffleEnabled);
+    // Reload current images with shuffle setting
+    loadImagesLeft(leftDirectoryPath);
+    loadImagesRight(rightDirectoryPath);
+  });
+}
 
 if (autoRotateCheckRight) {
   autoRotateCheckRight.addEventListener('change', (e) => {

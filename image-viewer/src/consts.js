@@ -43,6 +43,7 @@ export const UI_IDS = {
   SHARED_RECURSIVE_MODE_CHECK: 'sharedRecursiveModeCheck',
   INFO_PANEL: 'infoPanel',
   CLOSE_INFO_PANEL: 'closeInfoPanel',
+  SHUFFLE_CHECK: 'shuffleCheck',
   // Modal close button (CSS selector .close, not ID)
   MODAL_CLOSE_BUTTON: 'close',
   // Logs window elements

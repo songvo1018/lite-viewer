@@ -75,6 +75,15 @@ function createApiServer() {
               return `/${normalizedPath}`;
             });
 
+          // Shuffle order if requested
+          const shouldShuffle = urlParams.get('shuffle') === 'true';
+          if (shouldShuffle) {
+            for (let i = files.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [files[i], files[j]] = [files[j], files[i]];
+            }
+          }
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(files));
         } catch (error) {
